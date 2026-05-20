@@ -1,0 +1,4 @@
+anthropic[webhooks]>=0.103.1,<0.104
+modal>=0.60
+fastapi[standard]>=0.110
+standardwebhooks>=1.0
