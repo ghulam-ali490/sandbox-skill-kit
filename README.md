@@ -121,6 +121,7 @@ client.beta.sessions.events.send(
 - `scripts/e2e_test.py` — Level 3 driver: fires a real session and asserts tools ran inside the Modal sandbox
 - `docs/rollout.md` — when to use this kit vs Anthropic-managed sandboxes, plus a workshop-wide rollout plan
 - `examples/internal_data_kit/` — worked Phase 2 migration: a sample kit with internal-data tools wired into the worker via `tools=`, Level-1 verifiable with no CMA account
+- `.github/workflows/smoke.yml` — CI: compiles sources, checks the v0.103 SDK helpers import, runs the example's `verify.py` (all credential-free; no Modal/CMA)
 
 ## How it differs from the Anthropic cookbook
 

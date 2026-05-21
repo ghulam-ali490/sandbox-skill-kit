@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import subprocess
 import sys
 from typing import Callable
@@ -106,12 +107,38 @@ def check_modal_secret() -> bool:
     return True
 
 
+def check_env_key_shape() -> bool:
+    """Check ANTHROPIC_ENVIRONMENT_KEY shape if it is exported locally.
+
+    The live key lives in the Modal Secret and cannot be read back via the CLI,
+    so this only catches a mistake when the key is also present in the local
+    environment (e.g. while testing). A common slip is pasting the org API key
+    (`sk-ant-api...`) where the environment key (`sk-ant-oat-...`) belongs.
+    Returns True (non-fatal) when the key is not set locally.
+    """
+    key = os.environ.get("ANTHROPIC_ENVIRONMENT_KEY")
+    if not key:
+        _ok("ANTHROPIC_ENVIRONMENT_KEY not set locally (skip shape check; "
+            "real key lives in the Modal Secret)")
+        return True
+    if not key.startswith("sk-ant-oat-"):
+        _fail(
+            "ANTHROPIC_ENVIRONMENT_KEY does not start with 'sk-ant-oat-'. "
+            "Environment keys are NOT org API keys (sk-ant-api...). "
+            "Use the environment key from your CMA environment."
+        )
+        return False
+    _ok("ANTHROPIC_ENVIRONMENT_KEY has the expected sk-ant-oat- prefix")
+    return True
+
+
 def main() -> int:
     print("Pre-flight checks for sandbox-skill-kit:")
     checks: list[Callable[[], bool]] = [
         check_anthropic_sdk,
         check_modal_auth,
         check_modal_secret,
+        check_env_key_shape,
     ]
     failures = sum(1 for c in checks if not c())
     if failures:
