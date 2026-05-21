@@ -31,6 +31,19 @@ Pick the smallest existing kit whose tools genuinely need internal data. Wrap th
 
 Estimated time: 2-3 days depending on tool complexity.
 
+**Status (2026-05-21): no current kit qualifies.** The existing kits
+(`goal-command-kit`, `skill-recommender-kit`) are documentation-only — they ship
+a `SKILL.md` plus markdown resources and have no tool functions, so there is
+nothing to wrap into `worker(...)`. Phase 2 is therefore deferred until a kit
+that actually serves internal-data tools exists.
+
+To keep the pattern ready, the migration is captured as a worked reference at
+[`../examples/internal_data_kit/`](../examples/internal_data_kit/README.md): a
+sample kit with two internal-data tools wired into the worker via a `tools=`
+factory, Level-1 verified (`python examples/internal_data_kit/verify.py`) with
+no CMA account. The first tool-bearing kit copies that pattern; the live
+"run for a week" step still needs CMA access.
+
 ### Phase 3 — Update kit template
 
 Once Phase 2 has run cleanly for a week, update the workshop's new-kit template so future kits inherit the sandbox pattern by default. Workshop docs get a "when to use self-hosted vs managed" section pointing at the rollout-criteria above.

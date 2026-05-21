@@ -1,0 +1,13 @@
+{
+  "orders": {
+    "ORD-1001": {"status": "shipped", "carrier": "DHL", "eta": "2026-05-23"},
+    "ORD-1002": {"status": "processing", "carrier": null, "eta": null},
+    "ORD-1003": {"status": "delivered", "carrier": "UPS", "eta": "2026-05-19"}
+  },
+  "inventory": {
+    "SKU-RED-01": 4,
+    "SKU-BLU-02": 0,
+    "SKU-GRN-03": 120,
+    "SKU-BLK-04": 7
+  }
+}

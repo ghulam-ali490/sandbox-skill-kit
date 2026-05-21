@@ -120,6 +120,7 @@ client.beta.sessions.events.send(
 - `scripts/validate.py` — pre-flight sanity check (Modal authed, secret exists, SDK version, env key shape)
 - `scripts/e2e_test.py` — Level 3 driver: fires a real session and asserts tools ran inside the Modal sandbox
 - `docs/rollout.md` — when to use this kit vs Anthropic-managed sandboxes, plus a workshop-wide rollout plan
+- `examples/internal_data_kit/` — worked Phase 2 migration: a sample kit with internal-data tools wired into the worker via `tools=`, Level-1 verifiable with no CMA account
 
 ## How it differs from the Anthropic cookbook
 
