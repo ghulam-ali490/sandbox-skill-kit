@@ -1,0 +1,52 @@
+name: smoke
+
+# Credential-free smoke checks. These confirm the code compiles, the v0.103
+# SDK helpers the kit depends on are importable, and the Phase 2 example wiring
+# is correct. They deliberately do NOT touch Modal or a CMA account, so they
+# run on every push without secrets. The Modal/CMA path is validated by
+# scripts/validate.py and scripts/e2e_test.py, which need real credentials.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compile all Python sources
+        run: >-
+          python -m py_compile
+          modal_sandbox_webhook.py
+          sandbox_runner.py
+          scripts/validate.py
+          scripts/e2e_test.py
+          examples/internal_data_kit/internal_tools.py
+          examples/internal_data_kit/sandbox_runner.py
+          examples/internal_data_kit/verify.py
+
+      - name: SDK helpers present (v0.103 surface the kit relies on)
+        run: |
+          python -c "
+          import anthropic
+          from anthropic.lib.tools import beta_async_tool
+          from anthropic.lib.tools.agent_toolset import beta_agent_toolset_20260401, AgentToolContext
+          assert hasattr(anthropic.AsyncAnthropic, 'beta'), 'beta namespace missing'
+          v = tuple(int(p) for p in anthropic.__version__.split('.')[:3])
+          assert v >= (0, 103, 1), f'anthropic {anthropic.__version__} too old'
+          print('anthropic', anthropic.__version__, 'helpers OK')
+          "
+
+      - name: Phase 2 example verify
+        working-directory: examples/internal_data_kit
+        run: python verify.py
