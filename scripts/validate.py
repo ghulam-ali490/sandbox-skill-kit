@@ -13,6 +13,7 @@ Run before `modal deploy modal_sandbox_webhook.py`. Confirms:
 from __future__ import annotations
 
 import importlib
+import json
 import subprocess
 import sys
 from typing import Callable
@@ -54,7 +55,7 @@ def check_anthropic_sdk() -> bool:
 def check_modal_auth() -> bool:
     try:
         result = subprocess.run(
-            ["modal", "token", "current"],
+            ["modal", "profile", "current"],
             check=False,
             capture_output=True,
             text=True,
@@ -64,19 +65,20 @@ def check_modal_auth() -> bool:
         _fail("modal CLI not found. Run `pip install modal`.")
         return False
     except subprocess.TimeoutExpired:
-        _fail("modal token current timed out.")
+        _fail("modal profile current timed out.")
         return False
     if result.returncode != 0:
         _fail("Modal is not authenticated. Run `modal setup`.")
         return False
-    _ok("modal CLI authenticated")
+    workspace = result.stdout.strip()
+    _ok(f"modal CLI authenticated (workspace: {workspace})" if workspace else "modal CLI authenticated")
     return True
 
 
 def check_modal_secret() -> bool:
     try:
         result = subprocess.run(
-            ["modal", "secret", "list"],
+            ["modal", "secret", "list", "--json"],
             check=False,
             capture_output=True,
             text=True,
@@ -88,7 +90,13 @@ def check_modal_secret() -> bool:
     if result.returncode != 0:
         _fail(f"modal secret list failed: {result.stderr.strip()}")
         return False
-    if SECRET_NAME not in result.stdout:
+    try:
+        secrets = json.loads(result.stdout)
+        names = {s.get("Name") for s in secrets}
+    except (json.JSONDecodeError, AttributeError, TypeError) as e:
+        _fail(f"could not parse `modal secret list --json` output: {e}")
+        return False
+    if SECRET_NAME not in names:
         _fail(
             f"Modal Secret {SECRET_NAME!r} does not exist. "
             f"Create it with the placeholder values from README step 3."

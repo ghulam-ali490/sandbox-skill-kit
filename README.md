@@ -74,7 +74,30 @@ python scripts/validate.py
 
 This walks through every prereq: Modal authed, secret exists, SDK version correct, environment key format matches `sk-ant-oat-`, etc. Catches the usual day-1 misconfiguration before you fire a real session.
 
-### 6. Run a real session
+### 6. Run a real session (Level 3 end-to-end test)
+
+The kit ships a driver that creates a session, sends a task that forces a real
+shell command inside your Modal sandbox, polls to completion, prints the
+transcript, and exits non-zero on failure:
+
+```shell
+export ANTHROPIC_API_KEY=sk-ant-api...        # org key, used for session setup only
+export ANTHROPIC_ENVIRONMENT_ID=env_...       # SAME env_... that is in the Modal Secret
+export CMA_AGENT_ID=agt_...                    # optional; omit to auto-create a test agent
+python scripts/e2e_test.py
+```
+
+In another terminal, watch the sandbox side:
+
+```shell
+modal app logs cma-self-hosted-sandboxes
+```
+
+You should see `[webhook] acked work=... session=... sandbox=sb-...` and then
+`[runner] ...` lines from the sandbox itself, and the driver should end with
+`PASS: agent executed tools inside the self-hosted Modal sandbox`.
+
+Under the hood the driver does the equivalent of:
 
 ```py
 import anthropic
@@ -82,17 +105,10 @@ client = anthropic.Anthropic()  # uses your org API key for THIS step only
 session = client.beta.sessions.create(agent=AGENT_ID, environment_id=ENVIRONMENT_ID)
 client.beta.sessions.events.send(
     session.id,
-    events=[{"type": "user.message", "content": "ls -la /workspace"}],
+    # content is an array of content blocks, not a bare string
+    events=[{"type": "user.message", "content": [{"type": "text", "text": "run `uname -a`"}]}],
 )
 ```
-
-Then watch:
-
-```shell
-modal app logs cma-self-hosted-sandboxes
-```
-
-You should see `[webhook] acked work=... session=... sandbox=sb-...` and then `[runner] ...` lines from the sandbox itself.
 
 ## Files
 
@@ -102,6 +118,7 @@ You should see `[webhook] acked work=... session=... sandbox=sb-...` and then `[
 - `.env.example` — placeholder names for local secret setup; the real values live in Modal Secrets
 - `scripts/bootstrap.sh` — one-command wrapper around `modal secret create` + `modal deploy`
 - `scripts/validate.py` — pre-flight sanity check (Modal authed, secret exists, SDK version, env key shape)
+- `scripts/e2e_test.py` — Level 3 driver: fires a real session and asserts tools ran inside the Modal sandbox
 - `docs/rollout.md` — when to use this kit vs Anthropic-managed sandboxes, plus a workshop-wide rollout plan
 
 ## How it differs from the Anthropic cookbook
