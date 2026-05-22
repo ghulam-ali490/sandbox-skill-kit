@@ -82,7 +82,10 @@ def main() -> int:
         agent = client.beta.agents.create(
             name="sandbox-skill-kit-e2e",
             model="claude-sonnet-4-6",
-            system="You are a test agent. Use the bash tool to satisfy the user, then answer briefly.",
+            system=(
+                "You are a test agent. Use the bash tool to satisfy the user, "
+                "then answer briefly."
+            ),
             tools=[{"type": "agent_toolset_20260401"}],
         )
         agent_id = agent.id
@@ -96,7 +99,10 @@ def main() -> int:
         title="sandbox-skill-kit Level 3 e2e",
     )
     print(f"  session {session.id} status={session.status}")
-    print("  -> this should trigger your Modal webhook now. Watch: modal app logs cma-self-hosted-sandboxes\n")
+    print(
+        "  -> this should trigger your Modal webhook now. "
+        "Watch: modal app logs cma-self-hosted-sandboxes\n"
+    )
 
     client.beta.sessions.events.send(
         session.id,
@@ -115,7 +121,10 @@ def main() -> int:
             break
         time.sleep(POLL_SECONDS)
     else:
-        print(f"\nFAIL: session did not reach idle within {TIMEOUT_SECONDS}s (stuck at {last_status}).")
+        print(
+            f"\nFAIL: session did not reach idle within {TIMEOUT_SECONDS}s "
+            f"(stuck at {last_status})."
+        )
         print("Check `modal app logs cma-self-hosted-sandboxes` -- the webhook may not be firing.")
         return 1
 
@@ -147,9 +156,18 @@ def main() -> int:
               "The webhook likely is not routing tool execution to Modal.")
         return 1
 
-    print("\nPASS: agent executed tools inside the self-hosted Modal sandbox and the session idled cleanly.")
-    print("Confirm the sandbox side too: `modal secret list --json` should now show a non-'-' Last used at,")
-    print("and `modal app logs cma-self-hosted-sandboxes` should show [webhook] acked + [runner] lines.")
+    print(
+        "\nPASS: agent executed tools inside the self-hosted Modal sandbox "
+        "and the session idled cleanly."
+    )
+    print(
+        "Confirm the sandbox side too: `modal secret list --json` should now "
+        "show a non-'-' Last used at,"
+    )
+    print(
+        "and `modal app logs cma-self-hosted-sandboxes` should show "
+        "[webhook] acked + [runner] lines."
+    )
     return 0
 
 

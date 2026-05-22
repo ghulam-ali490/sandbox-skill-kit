@@ -22,7 +22,10 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Lint (ruff, kit-owned files; cookbook modules excluded)
+        run: ruff check .
 
       - name: Compile all Python sources
         run: >-
@@ -46,6 +49,9 @@ jobs:
           assert v >= (0, 103, 1), f'anthropic {anthropic.__version__} too old'
           print('anthropic', anthropic.__version__, 'helpers OK')
           "
+
+      - name: Offline tests (mock the SDK + Modal; no CMA account needed)
+        run: pytest
 
       - name: Phase 2 example verify
         working-directory: examples/internal_data_kit

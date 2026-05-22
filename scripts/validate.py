@@ -17,10 +17,14 @@ import json
 import os
 import subprocess
 import sys
-from typing import Callable
+from collections.abc import Callable
 
 SECRET_NAME = "cma-self-hosted-sandboxes-secrets"
-REQUIRED_KEYS = ("ANTHROPIC_WEBHOOK_SECRET", "ANTHROPIC_ENVIRONMENT_ID", "ANTHROPIC_ENVIRONMENT_KEY")
+REQUIRED_KEYS = (
+    "ANTHROPIC_WEBHOOK_SECRET",
+    "ANTHROPIC_ENVIRONMENT_ID",
+    "ANTHROPIC_ENVIRONMENT_KEY",
+)
 MIN_SDK = (0, 103, 1)
 
 
@@ -72,7 +76,11 @@ def check_modal_auth() -> bool:
         _fail("Modal is not authenticated. Run `modal setup`.")
         return False
     workspace = result.stdout.strip()
-    _ok(f"modal CLI authenticated (workspace: {workspace})" if workspace else "modal CLI authenticated")
+    _ok(
+        f"modal CLI authenticated (workspace: {workspace})"
+        if workspace
+        else "modal CLI authenticated"
+    )
     return True
 
 

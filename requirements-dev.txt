@@ -1,0 +1,9 @@
+# Dev/test dependencies. Install on top of requirements.txt:
+#   pip install -r requirements.txt -r requirements-dev.txt
+#
+# These power the offline test suite (tests/), which mocks the Anthropic SDK
+# and Modal so the webhook wiring is exercised with NO CMA account or Modal
+# deploy. Keep them out of requirements.txt so the deployed image stays lean.
+pytest>=8,<10
+pytest-asyncio>=0.23
+ruff>=0.6

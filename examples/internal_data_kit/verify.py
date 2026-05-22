@@ -16,9 +16,9 @@ from __future__ import annotations
 import asyncio
 import sys
 
+import internal_tools
 from anthropic.lib.tools.agent_toolset import AgentToolContext
 
-import internal_tools
 import sandbox_runner
 
 EXPECTED_CUSTOM = {"lookup_order_status", "list_low_stock_skus"}

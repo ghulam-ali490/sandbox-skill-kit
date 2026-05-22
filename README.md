@@ -144,7 +144,23 @@ client.beta.sessions.events.send(
 - `scripts/e2e_test.py` — Level 3 driver: fires a real session and asserts tools ran inside the Modal sandbox
 - `docs/rollout.md` — when to use this kit vs Anthropic-managed sandboxes, plus a workshop-wide rollout plan
 - `examples/internal_data_kit/` — worked Phase 2 migration: a sample kit with internal-data tools wired into the worker via `tools=`, Level-1 verifiable with no CMA account
-- `.github/workflows/smoke.yml` — CI: compiles sources, checks the v0.103 SDK helpers import, runs the example's `verify.py` (all credential-free; no Modal/CMA)
+- `tests/` — offline tests that mock the Anthropic SDK and Modal, so the webhook wiring (signature verify, queue drain, get-or-create sandbox, event routing) is exercised with **no CMA account and no Modal deploy**
+- `requirements-dev.txt` — test/lint deps (`pytest`, `pytest-asyncio`, `ruff`)
+- `pyproject.toml` — pytest + ruff config; cookbook-derived modules are excluded from ruff to stay byte-faithful to upstream
+- `.github/workflows/smoke.yml` — CI: ruff lint, compiles sources, checks the v0.103 SDK helpers import, runs the offline tests and the example's `verify.py` (all credential-free; no Modal/CMA)
+
+## Development
+
+The kit ships an offline test suite that mocks the Anthropic SDK and Modal, so
+you can exercise the webhook logic with no CMA account and no deploy:
+
+```shell
+pip install -r requirements.txt -r requirements-dev.txt
+ruff check .     # lint kit-owned files (cookbook modules are excluded)
+pytest           # offline tests of verify / drain / get-or-create / routing
+```
+
+These are exactly the checks CI runs on every push.
 
 ## Troubleshooting
 
