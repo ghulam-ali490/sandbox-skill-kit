@@ -56,12 +56,21 @@ a `SKILL.md` plus markdown resources and have no tool functions, so there is
 nothing to wrap into `worker(...)`. Phase 2 is therefore deferred until a kit
 that actually serves internal-data tools exists.
 
-To keep the pattern ready, the migration is captured as a worked reference at
-[`../examples/internal_data_kit/`](../examples/internal_data_kit/README.md): a
-sample kit with two internal-data tools wired into the worker via a `tools=`
-factory, Level-1 verified (`python examples/internal_data_kit/verify.py`) with
-no CMA account. The first tool-bearing kit copies that pattern; the live
-"run for a week" step still needs CMA access.
+To keep the pattern ready, the migration is captured as two worked references,
+each Level-1 verified with no CMA account. The first tool-bearing kit copies
+whichever matches how its tools read data; the live "run for a week" step still
+needs CMA access.
+
+- [`../examples/internal_data_kit/`](../examples/internal_data_kit/README.md) —
+  tools reading a **bundled file / static dataset**
+  (`python examples/internal_data_kit/verify.py`).
+- [`../examples/internal_api_kit/`](../examples/internal_api_kit/README.md) —
+  tools calling a **private HTTP API** with a sandbox-only credential, the more
+  common real-world shape; verifiable offline via an httpx mock
+  (`python examples/internal_api_kit/verify.py`).
+
+Both reduce to the same one-line change: keep `worker()`, pass a `tools=`
+factory. The API example adds only the env-configured credential contract.
 
 ### Phase 3 — Update kit template
 

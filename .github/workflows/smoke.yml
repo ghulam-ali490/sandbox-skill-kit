@@ -37,6 +37,9 @@ jobs:
           examples/internal_data_kit/internal_tools.py
           examples/internal_data_kit/sandbox_runner.py
           examples/internal_data_kit/verify.py
+          examples/internal_api_kit/internal_api_tools.py
+          examples/internal_api_kit/sandbox_runner.py
+          examples/internal_api_kit/verify.py
 
       - name: SDK helpers present (v0.103 surface the kit relies on)
         run: |
@@ -53,6 +56,10 @@ jobs:
       - name: Offline tests (mock the SDK + Modal; no CMA account needed)
         run: pytest
 
-      - name: Phase 2 example verify
+      - name: Phase 2 example verify (internal_data_kit)
         working-directory: examples/internal_data_kit
+        run: python verify.py
+
+      - name: Phase 2 example verify (internal_api_kit)
+        working-directory: examples/internal_api_kit
         run: python verify.py
