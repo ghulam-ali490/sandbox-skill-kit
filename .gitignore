@@ -6,6 +6,9 @@ __pycache__/
 .venv/
 venv/
 .env
+# Local-only Windows secret-setup helper (holds the modal secret create call).
+# Kept out of the repo so real environment keys are never committed.
+setup_secret.ps1
 .idea/
 .vscode/
 .DS_Store
