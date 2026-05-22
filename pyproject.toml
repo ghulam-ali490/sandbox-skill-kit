@@ -7,6 +7,9 @@
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+# Put the repo root on sys.path so tests can `import modal_sandbox_webhook`
+# under a bare `pytest` invocation (not just `python -m pytest`).
+pythonpath = ["."]
 addopts = "-q"
 
 [tool.ruff]
