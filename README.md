@@ -188,6 +188,14 @@ The code in `modal_sandbox_webhook.py` and `sandbox_runner.py` is adapted from `
 
 If you want the unwrapped cookbook reference, https://github.com/anthropics/claude-cookbooks/tree/main/managed_agents/self_hosted_sandboxes is the source.
 
+## Security
+
+Tool execution runs on your infrastructure, but the model's reasoning still
+runs on Anthropic and the agent gets a real shell inside the sandbox. See
+[`SECURITY.md`](SECURITY.md) for what the isolation does and does not cover,
+plus secret-handling and rotation guidance, before putting sensitive data
+behind it.
+
 ## License
 
 MIT (matches the upstream cookbook).

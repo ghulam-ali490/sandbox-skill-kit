@@ -12,6 +12,25 @@ Adopt if at least one is true:
 
 Skip if your kit's tools are happy in Anthropic-managed sandboxes. The kit adds operational surface (Modal account, webhook registration, secret rotation) that only pays for itself when at least one of the above is true.
 
+## Why Modal (host comparison)
+
+The kit targets Modal. That choice came out of the research pass; the table
+records the trade-offs so the workshop can revisit it if requirements change.
+
+| Host | Python-first | Per-session isolated sandbox | Cookbook reference exists | Free R&D tier | Notes |
+| --- | --- | --- | --- | --- | --- |
+| **Modal** (chosen) | Yes | Yes (`modal.Sandbox`) | Yes (upstream ships a Modal sample) | $30/mo Starter credits | Per-second billing, idle auto-stop, one-command deploy. Best fit for a Python `EnvironmentWorker`. |
+| Docker (self-managed) | Yes | Yes (container per session) | Partial | N/A (own infra) | Most control, most ops: you own scheduling, scaling, teardown, and the host box. Good if a workshop already runs its own cluster. |
+| Cloudflare Containers | Partial | Yes | No | Limited beta | Newer; container model still maturing. Worth re-checking once GA. |
+| Cloudflare Workers | No (JS/WASM-first) | No (no arbitrary `bash`) | No | Generous | Wrong execution model for a shell-running agent sandbox. |
+| Vercel Functions | No (request/response) | No (ephemeral, no long-lived sandbox) | No | Generous | Built for web handlers, not long-running per-session sandboxes. |
+| Daytona | Yes | Yes (dev environments) | No | Limited | Aimed at dev environments rather than ephemeral agent sandboxes; heavier per-session. |
+
+Decision: **Modal** wins on Python-first ergonomics, a per-session sandbox
+primitive that maps directly onto one CMA session, an upstream cookbook
+reference to adapt, and a free tier that covers all of R&D. Revisit if the
+workshop standardises on a different platform or needs non-Python runtimes.
+
 ## Phased rollout
 
 ### Phase 1 — Prove the path (this kit)
@@ -62,6 +81,7 @@ Document the integration when both conditions are met.
 - Modal workspace seat assigned to the workshop
 - Anthropic CMA environment provisioned with both `environment_id` and `environment_key`
 - One named owner for the Modal Secret rotation cadence (recommend rotate every 90 days)
+- A read of [`../SECURITY.md`](../SECURITY.md): confirm the isolation boundary and mount/egress scoping match the data the migrated kit will touch
 
 ## Cost notes
 
