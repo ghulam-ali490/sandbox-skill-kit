@@ -14,6 +14,29 @@ A Modal-deployed webhook that:
 
 The kit isolates agent tool execution to **your infrastructure** (Modal) instead of Anthropic-managed sandboxes. Useful when tools need to see internal data, files, or services that should not leave your network.
 
+## Architecture
+
+```
+  Anthropic CMA                          Your Modal account
+  -------------                          ------------------
+                                                                              
+  session runs ----(1) session.status_run_started webhook---->  modal_sandbox_webhook.py
+       ^                                                              |
+       |                                                     (2) drain the work queue
+       |                                                         (recovers missed events)
+       |                                                              |
+       |                                                     (3) spawn 1 Modal Sandbox
+       |                                                            per session
+       |                                                              |
+       |                                                              v
+       |                                                       sandbox_runner.py
+       +----(5) tool results / final answer-----------  (4) worker().handle_item()
+                                                          bash/read/write/edit/glob/grep
+                                                          execute HERE, on your infra
+```
+
+The agent's reasoning stays on Anthropic; only **tool execution** is pulled into your Modal sandbox. The sandbox auto-exits ~60s after the session goes idle.
+
 ## When to use it
 
 - You are running a workshop kit whose tools need internal data (a private DB, a workshop-only file share, an internal API)
@@ -122,6 +145,21 @@ client.beta.sessions.events.send(
 - `docs/rollout.md` — when to use this kit vs Anthropic-managed sandboxes, plus a workshop-wide rollout plan
 - `examples/internal_data_kit/` — worked Phase 2 migration: a sample kit with internal-data tools wired into the worker via `tools=`, Level-1 verifiable with no CMA account
 - `.github/workflows/smoke.yml` — CI: compiles sources, checks the v0.103 SDK helpers import, runs the example's `verify.py` (all credential-free; no Modal/CMA)
+
+## Troubleshooting
+
+First-run issues, in roughly the order people hit them:
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `ModuleNotFoundError` / `validate.py` says SDK too old | anthropic < 0.103.1, the version that ships the sandbox helpers | `pip install -r requirements.txt` (pinned `>=0.103.1,<0.104`) |
+| `Secret 'cma-self-hosted-sandboxes-secrets' not found` on deploy | Modal Secret never created | Run the `modal secret create ...` step above |
+| On **Windows PowerShell**, `modal secret create` fails or splits a value | PowerShell wraps the multi-line backslash command mid-argument | Put it on **one line**, or define the keys in a PS array and splat them into one `modal secret create` call |
+| Driver runs but **no `[webhook]` lines** in `modal app logs` | Webhook URL not registered for `session.status_run_started`, or the registered URL is stale | Re-register the `*.modal.run` URL in Console for that exact event; the drainer recovers the missed session on the next event |
+| `modal secret list --json` shows `"Last used": "-"` | The secret has never been read, i.e. no session has reached the webhook yet | Expected before your first real session; non-zero once one fires |
+| `401`/`403` on `sessions.create` | `ANTHROPIC_API_KEY` is a chat key or belongs to a different org than the environment | Use an **org API key from the same org** as the `env_...` |
+| `validate.py` flags the env key shape | `ANTHROPIC_ENVIRONMENT_KEY` must start with `sk-ant-oat-` | Use the environment key (not an `sk-ant-api-` org key) |
+| `git push` rejected with a `workflow` scope error (contributors only) | The gh token lacks the `workflow` scope needed to edit `.github/workflows/` | `gh auth refresh -h github.com -s workflow` in a real terminal (browser step needed) |
 
 ## How it differs from the Anthropic cookbook
 
