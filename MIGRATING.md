@@ -234,6 +234,7 @@ through 7 are reachable with no Modal account and no CMA access (Level 1).
 | **Level 0** (`python scripts/check_tools.py`) | Your tools module is free of the structural gotchas below (name collisions, missing type hints/docstrings, KIT_TOOLS issues) | Nothing beyond Python 3.12 |
 | **Level 1** (`python verify.py`) | Your tools have valid schemas, land in the factory, and return correct strings against an offline fixture | Nothing beyond Python 3.12 |
 | **Level 2** (`python scripts/validate.py` + `modal deploy`) | Modal is authed, the Secret exists, the SDK version is correct, the webhook is reachable | Modal account |
+| **Level 2.5** (`python scripts/probe_webhook.py`) | The deployed webhook is alive AND verifying signatures correctly (unsigned → 401; signed non-`run_started` → 200 ignored) | Modal account + deployed webhook |
 | **Level 3** (`python scripts/e2e_test.py`) | A real CMA session uses one of your tools inside your Modal sandbox | Modal account + CMA env + webhook registered |
 
 Treat Level 1 as the green-light to start the deploy steps; Level 2 as the
