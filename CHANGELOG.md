@@ -6,8 +6,15 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-Post-v0.1 work that has shipped to `main`. Will be cut as `v0.2.0` once the
-slate is stable.
+_No unreleased changes._
+
+## [0.2.0] - 2026-05-25
+
+Second tagged release. Extends the example pattern catalogue to five
+(adds queue + S3), ships kit-author tooling (`scripts/doctor.py`,
+`.pre-commit-config.yaml`, `CONTRIBUTING.md`), tightens the pre-flight
+linter (closes the v0.1 aliased-decorator limitation; adds snake_case /
+return-type / `Returns:` rules), and updates all docs.
 
 ### Added
 
@@ -188,4 +195,5 @@ keep `worker()`, pass a `tools=` factory.
 - MCP tunnels are out of scope for v0.1 (Phase 4 of the rollout plan).
   They are a separate Research Preview feature gated independently.
 
+[0.2.0]: https://github.com/ghulam-ali490/sandbox-skill-kit/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ghulam-ali490/sandbox-skill-kit/releases/tag/v0.1.0
