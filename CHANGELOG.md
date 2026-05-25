@@ -27,6 +27,12 @@ slate is stable.
   the script is intentionally NOT run from CI (CI already runs each
   underlying check individually) but is the recommended pre-push gate
   for contributors.
+- `.pre-commit-config.yaml` -- optional pre-commit hooks (install once
+  with `pre-commit install`). Runs trailing-whitespace + end-of-file-fixer
+  + YAML/TOML/merge-conflict/large-file checks, `ruff --fix`, `ruff-format`,
+  `check_tools.py --strict` (when any example tool module changes), and
+  the offline `pytest` suite. Faster than `doctor.py` so it gates every
+  commit; use `doctor.py` before pushing.
 - `CONTRIBUTING.md` -- kit-internal contributor guide (distinct from
   `MIGRATING.md` which is for adopters). Covers the local dev loop
   (`scripts/doctor.py` is the gate), house rules (no `git add -A`,

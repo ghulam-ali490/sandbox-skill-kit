@@ -1,0 +1,44 @@
+# Pre-commit hooks for sandbox-skill-kit. Install once with `pre-commit install`
+# (after `pip install pre-commit`) and the hooks below will run on every
+# `git commit`. They cover the same checks CI runs, narrower than `doctor.py`
+# (which also runs every example verify + the scaffold-drift check) but
+# fast enough to gate every commit.
+#
+# If you want the full ten-step check before pushing, run `python scripts/doctor.py`.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=512"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.0
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: check-tools
+        name: check_tools.py (pre-flight all example tool modules)
+        entry: python scripts/check_tools.py --strict
+        language: system
+        # Re-run on any change to example tool modules OR to the linter itself.
+        files: "^(examples/internal_.+_kit/.+_tools\\.py|scripts/check_tools\\.py)$"
+        pass_filenames: false
+
+      - id: pytest
+        name: pytest (offline suite)
+        entry: python -m pytest -q
+        language: system
+        # Re-run on any Python source change. The suite is fast (~5s offline).
+        files: "\\.py$"
+        pass_filenames: false

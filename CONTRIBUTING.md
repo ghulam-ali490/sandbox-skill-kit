@@ -81,6 +81,22 @@ commit looks ready, fix and create a **new** commit rather than
 amending -- amending a commit that the hook bounced means the hook
 never actually approved the file content you ended up with.
 
+## Pre-commit hooks (optional but recommended)
+
+The repo ships [`.pre-commit-config.yaml`](.pre-commit-config.yaml). After
+`pip install pre-commit`, install the hooks once:
+
+```shell
+pre-commit install
+```
+
+Now every `git commit` runs: trailing-whitespace + end-of-file-fixer + YAML
+/ TOML / merge-conflict / large-file checks; `ruff` with `--fix` then
+`ruff-format`; `scripts/check_tools.py --strict` when any example tool
+module changes; and the offline `pytest` suite. The hooks are intentionally
+faster than `doctor.py` (no per-example verify, no scaffold-drift) so they
+gate every commit without slowing the loop. Run `doctor.py` before pushing.
+
 ## Adding a new example template
 
 The five existing templates (`internal_data_kit`, `internal_api_kit`,
