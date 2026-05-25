@@ -234,6 +234,13 @@ runs on Anthropic and the agent gets a real shell inside the sandbox. See
 plus secret-handling and rotation guidance, before putting sensitive data
 behind it.
 
+## Contributing
+
+If you are editing the kit itself (not just adopting it for your own kit),
+see [`CONTRIBUTING.md`](CONTRIBUTING.md) for the local dev loop, house
+rules (no `git add -A`, cookbook fidelity), and the checklists for adding
+a new example template or a new `check_tools` rule.
+
 ## Versioning and changelog
 
 This kit follows [SemVer](https://semver.org/). Current release: **v0.1.0**.

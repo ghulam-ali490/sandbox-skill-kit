@@ -27,6 +27,13 @@ slate is stable.
   the script is intentionally NOT run from CI (CI already runs each
   underlying check individually) but is the recommended pre-push gate
   for contributors.
+- `CONTRIBUTING.md` -- kit-internal contributor guide (distinct from
+  `MIGRATING.md` which is for adopters). Covers the local dev loop
+  (`scripts/doctor.py` is the gate), house rules (no `git add -A`,
+  cookbook fidelity), the checklist for adding a new example template
+  (touches `new_example.py` + `check_tools.py` + three test files +
+  CI + three docs), the checklist for adding a new `check_tools` rule,
+  and the release procedure.
 - `examples/internal_s3_kit/` -- fifth Phase 2 example. Object-store
   pattern (S3 / GCS / Cloudflare R2 / self-hosted MinIO / ...). Env
   contract `INTERNAL_S3_BUCKET` + `INTERNAL_S3_REGION` +
