@@ -222,6 +222,12 @@ runs on Anthropic and the agent gets a real shell inside the sandbox. See
 plus secret-handling and rotation guidance, before putting sensitive data
 behind it.
 
+## Versioning and changelog
+
+This kit follows [SemVer](https://semver.org/). Current release: **v0.1.0**.
+See [`CHANGELOG.md`](CHANGELOG.md) for what is in each tag and the known
+limitations of each release.
+
 ## License
 
 MIT (matches the upstream cookbook).
