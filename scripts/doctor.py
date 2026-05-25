@@ -21,6 +21,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import atexit
 import shutil
 import subprocess
 import sys
@@ -110,6 +111,10 @@ def _scaffold_drift_steps() -> list[Step]:
     stays atomic per phase.
     """
     tmp = Path(tempfile.mkdtemp(prefix="doctor_scaffold_"))
+    # Clean up the scratch dir on process exit so repeated doctor runs don't
+    # accumulate doctor_scaffold_* dirs in TMPDIR. ignore_errors so a partial
+    # run that left an unreadable file does not crash exit.
+    atexit.register(shutil.rmtree, tmp, True)
     name = "doctor_scaffold_smoke"
     scaffolded = tmp / name
     return [

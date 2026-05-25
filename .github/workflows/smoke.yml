@@ -36,6 +36,8 @@ jobs:
           scripts/e2e_test.py
           scripts/new_example.py
           scripts/check_tools.py
+          scripts/doctor.py
+          scripts/probe_webhook.py
           examples/internal_data_kit/internal_tools.py
           examples/internal_data_kit/sandbox_runner.py
           examples/internal_data_kit/verify.py

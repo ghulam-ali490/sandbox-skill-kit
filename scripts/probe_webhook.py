@@ -137,8 +137,8 @@ def signed_probe(url: str, whsecret: str) -> ProbeResult:
             "signed probe",
             False,
             f"expected 200, got {resp.status_code}. Body: {snippet!r}. "
-            "Common causes: webhook secret mismatch, or the deploy is older "
-            "than your CHANGELOG (bug B4 makes pre-v0.3 reject UTF-8 as 500).",
+            "Common causes: webhook secret mismatch between your local env "
+            "and the Modal Secret; or the deployed event-routing was changed.",
         )
     try:
         data = resp.json()

@@ -1,7 +1,7 @@
-"""Scaffold a new example kit from one of the three Phase 2 templates.
+"""Scaffold a new example kit from one of the five Phase 2 templates.
 
 Usage:
-    python scripts/new_example.py <kit_name> [--pattern data|api|db] [--dest DIR]
+    python scripts/new_example.py <kit_name> [--pattern data|api|db|queue|s3] [--dest DIR]
 
 Copies one of the existing examples into ``<dest>/<kit_name>/``, renames the
 tool module to ``<kit_name>_tools.py``, and rewrites imports + folder-name
@@ -9,14 +9,17 @@ references so the result is immediately verifiable:
 
     python <dest>/<kit_name>/verify.py
 
-The author then edits the two tool functions (and, for the api/db patterns,
-the env var name + offline fixture) to point at their real internal data. The
-Phase 2 worker wiring stays unchanged -- that is the whole point.
+The author then edits the two tool functions (and, for the
+api/db/queue/s3 patterns, the env var names + offline fixture) to point at
+their real internal data. The Phase 2 worker wiring stays unchanged --
+that is the whole point.
 
 Patterns:
-  data  Bundled JSON file (the simplest; default)
-  api   Private HTTP API behind a token; ships an httpx MockTransport fixture
-  db    Private database via env-configured DSN; ships an in-memory sqlite fixture
+  data   Bundled JSON file (the simplest; default)
+  api    Private HTTP API behind a token; ships an httpx MockTransport fixture
+  db     Private database via env-configured DSN; ships an in-memory sqlite fixture
+  queue  Private message queue (SQS / Redis / NATS); ships an in-memory dict fixture
+  s3     Private object store (S3 / GCS / R2 / MinIO); ships an in-memory dict fixture
 """
 from __future__ import annotations
 
@@ -185,8 +188,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Scaffolded: {target}")
     print(f"Verify it: cd {target} && python verify.py")
     print(
-        "Next: edit the two tool functions (and, for api/db, the env var name "
-        "and offline fixture) to point at your real internal data."
+        "Next: see the scaffolded README.md for the full edit checklist "
+        "(rename tools, update KIT_TOOLS, update verify.py assertions, etc.)."
     )
     return 0
 

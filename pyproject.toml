@@ -1,8 +1,11 @@
-# Tooling config for the kit's OWN files. The cookbook-derived modules
-# (modal_sandbox_webhook.py, sandbox_runner.py, and the example's
-# sandbox_runner.py) are deliberately excluded from ruff so they stay
-# byte-faithful to the upstream Anthropic reference -- see the README section
-# "How it differs from the Anthropic cookbook".
+# Tooling config for the kit's OWN files. The two cookbook-derived modules
+# (modal_sandbox_webhook.py and sandbox_runner.py) are deliberately excluded
+# from ruff so they stay byte-faithful to the upstream Anthropic reference --
+# see the README section "How it differs from the Anthropic cookbook". The
+# per-example sandbox_runner.py files (one per example kit) are
+# kit-original wiring layers (they import from each example's *_tools
+# module, which has no upstream equivalent) and ARE linted at project level
+# without issue, so no per-example exclude is needed.
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -18,7 +21,6 @@ line-length = 100
 extend-exclude = [
     "modal_sandbox_webhook.py",
     "sandbox_runner.py",
-    "examples/internal_data_kit/sandbox_runner.py",
 ]
 
 [tool.ruff.lint]

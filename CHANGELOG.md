@@ -64,6 +64,49 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **Full-system audit pass** (a systematic re-audit across 6 dimensions:
+  inventory, code correctness, docs-vs-reality, link integrity, test
+  coverage, dependency/config):
+  - `.github/workflows/smoke.yml` `Compile all Python sources` step was
+    missing `scripts/doctor.py` and `scripts/probe_webhook.py` (both
+    added post-v0.2). Syntax errors in those two scripts would have
+    been caught only via the test imports, not directly. Now listed.
+  - `pyproject.toml` `[tool.ruff] extend-exclude` listed
+    `examples/internal_data_kit/sandbox_runner.py` but not the four
+    other example runners. Investigated: all 5 example runners pass
+    ruff cleanly at project level (the false positive comes from
+    single-file checks where ruff lacks project context). The
+    `internal_data_kit` exclude was vestigial; removed for honesty.
+    Updated the comment to explain the remaining two excludes
+    (cookbook-derived modules only).
+  - `scripts/new_example.py` module docstring said "three Phase 2
+    templates" and its `Patterns:` section listed only data/api/db --
+    stale since v0.2 added queue + s3. Docstring + usage + final
+    `print` updated to mention all 5; final print also de-duplicates
+    the README's edit checklist.
+  - `scripts/probe_webhook.py` error message referenced "bug B4 makes
+    pre-v0.3 reject UTF-8 as 500" -- misleading, since B4 was about
+    NON-UTF-8 (decode failure) and a signed probe sends valid UTF-8
+    JSON. Reworded the hint to focus on the actual likely cause
+    (secret mismatch).
+  - `scripts/doctor.py` `_scaffold_drift_steps()` created a tmp dir
+    via `tempfile.mkdtemp` and never cleaned it up; repeated doctor
+    runs accumulated `doctor_scaffold_*` dirs in `TMPDIR`. Added
+    `atexit.register(shutil.rmtree, tmp, True)` so the dir is removed
+    on process exit (ignore_errors so a partial run can't crash
+    teardown).
+  - `tests/test_validate.py` (17 new tests) -- `scripts/validate.py`
+    had no dedicated test coverage despite being adopter-facing and
+    branching on multiple failure paths per check. Mocks
+    `importlib.import_module` and `subprocess.run` to exercise each
+    branch: SDK pass / missing / too-old / broken-install; Modal auth
+    pass / not-authed / CLI-missing / timeout; secret present / absent
+    / command-failed / unparseable-JSON; env key absent (non-fatal) /
+    correct-prefix / wrong-prefix (the common "pasted org API key"
+    slip); `main()` aggregation.
+  - Markdown link integrity: 12 .md files, all internal links resolve.
+    Audited via a small helper script.
+
 - **Bug hunt pass** (from a critical-eye read of every kit-owned file):
   - `modal_sandbox_webhook.py` `_verify_webhook` now catches
     `UnicodeDecodeError` alongside the existing signature-failure
