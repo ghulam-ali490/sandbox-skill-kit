@@ -144,6 +144,7 @@ client.beta.sessions.events.send(
 - `scripts/e2e_test.py` — Level 3 driver: fires a real session and asserts tools ran inside the Modal sandbox
 - `scripts/new_example.py` — scaffold a new example kit from one of the three Phase 2 templates: `python scripts/new_example.py my_kit --pattern db`
 - `docs/rollout.md` — when to use this kit vs Anthropic-managed sandboxes, plus a workshop-wide rollout plan
+- `MIGRATING.md` — kit-author checklist: 13 ticks across Level 1 (offline), Level 2 (Modal deploy), Level 3 (live CMA), plus common gotchas and a validation-gates summary
 - `examples/internal_data_kit/` — worked Phase 2 migration: tools reading a bundled dataset, wired into the worker via `tools=`, Level-1 verifiable with no CMA account
 - `examples/internal_api_kit/` — second Phase 2 migration: tools calling a private HTTP API with a sandbox-only credential (the common real-world shape), verifiable offline via an httpx mock
 - `examples/internal_db_kit/` — third Phase 2 migration: tools querying a private database via an env-configured DSN, verifiable offline against an in-memory seeded sqlite (swap `_conn()` for `asyncpg`/`aiomysql`/etc. to go live against a real DB)
@@ -169,6 +170,9 @@ copies the template, renames the tool module to `my_kit_tools.py`, and
 rewrites imports so the result is immediately runnable. Then edit the two
 tool functions (and, for `api`/`db`, the env var name and offline fixture)
 to point at your real internal data.
+
+For the full step-by-step from scaffold through to a live CMA session, see
+[`MIGRATING.md`](MIGRATING.md).
 
 ## Development
 

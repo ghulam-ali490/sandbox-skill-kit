@@ -78,6 +78,10 @@ All three reduce to the same one-line change: keep `worker()`, pass a `tools=`
 factory. The API and DB examples add only the env-configured credential
 contract (token vs. DSN).
 
+When a kit is ready to migrate for real, the step-by-step from scaffold to
+live CMA session is in [`../MIGRATING.md`](../MIGRATING.md) (13-tick
+checklist across Level 1 offline / Level 2 Modal deploy / Level 3 live).
+
 ### Phase 3 — Update kit template
 
 Once Phase 2 has run cleanly for a week, update the workshop's new-kit template so future kits inherit the sandbox pattern by default. Workshop docs get a "when to use self-hosted vs managed" section pointing at the rollout-criteria above.
