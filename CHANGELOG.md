@@ -48,6 +48,20 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - `tests/test_scaffold.py` asserts the new adopter README shape +
     the TODO marker presence.
 
+- `scripts/probe_webhook.py` -- closes the Level 2 → Level 3 gap. After
+  `modal deploy`, run `python scripts/probe_webhook.py` (with
+  `ANTHROPIC_WEBHOOK_URL` + optional `ANTHROPIC_WEBHOOK_SECRET` in env)
+  to confirm the webhook is alive + verifying signatures, WITHOUT
+  needing Anthropic Research Preview access. Two probes: unsigned POST
+  → expect 401 (reachable + signing enforced); signed non-`run_started`
+  POST → expect 200 with `status=ignored` (signature verification works
+  end-to-end). Uses `httpx` + `standardwebhooks`, both already kit deps.
+  12 tests cover both probes' pass / fail / network-error / 401 / wrong
+  shape paths, plus a round-trip that signs with `_build_signed_headers`
+  and verifies under `standardwebhooks.Webhook` to catch any
+  off-by-one or wrong-field bug. README adds step 5b; MIGRATING adds
+  step 12b + a new "Level 2.5" row in the validation gates table.
+
 ### Fixed
 
 - **Bug hunt pass** (from a critical-eye read of every kit-owned file):

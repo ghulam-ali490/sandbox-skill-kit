@@ -173,6 +173,18 @@ through 7 are reachable with no Modal account and no CMA access (Level 1).
   Secret (step 11), and re-deploy is not needed -- the webhook re-reads on
   next request.
 
+- [ ] **12b. Probe the deploy (optional but recommended).** Confirm the
+  webhook is alive + verifying signatures BEFORE you have CMA access by
+  running:
+  ```shell
+  export ANTHROPIC_WEBHOOK_URL='https://...modal.run'
+  export ANTHROPIC_WEBHOOK_SECRET='whsec_...'
+  python scripts/probe_webhook.py
+  ```
+  An unsigned POST should reject as 401; a signed non-`run_started` POST
+  should accept as 200 with `status=ignored`. Closes the Level 2 → Level 3
+  gap so you know the deploy is good before step 13.
+
 ### Level 3: prove it end to end
 
 - [ ] **13. Run the e2e driver:**

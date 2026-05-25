@@ -97,6 +97,23 @@ python scripts/validate.py
 
 This walks through every prereq: Modal authed, secret exists, SDK version correct, environment key format matches `sk-ant-oat-`, etc. Catches the usual day-1 misconfiguration before you fire a real session.
 
+### 5b. Verify the deploy without CMA (optional but recommended)
+
+If you have not been granted Anthropic Research Preview access yet, you can
+still confirm your deploy is live and verifying signatures correctly:
+
+```shell
+export ANTHROPIC_WEBHOOK_URL='https://<workspace>--<app>-webhook.modal.run'
+export ANTHROPIC_WEBHOOK_SECRET='whsec_...'   # optional; enables the signed probe
+python scripts/probe_webhook.py
+```
+
+The unsigned probe (always runs) expects a 401 from the webhook. The signed
+probe (runs if the secret is set) sends a correctly-signed non-`run_started`
+event and expects `{"status": "ignored", ...}` -- the same code path a real
+event triggers, minus the actual sandbox spawn. Closes the Level 2 → Level 3
+gap so you know the deploy is good before CMA access lands.
+
 ### 6. Run a real session (Level 3 end-to-end test)
 
 The kit ships a driver that creates a session, sends a task that forces a real
@@ -155,6 +172,7 @@ client.beta.sessions.events.send(
 - `scripts/new_example.py` — scaffold a new example kit from one of the three Phase 2 templates: `python scripts/new_example.py my_kit --pattern db`
 - `scripts/check_tools.py` — pre-flight linter for `*_tools.py` modules: catches default-toolset name collisions, missing type hints / docstrings, KIT_TOOLS gaps. Run BEFORE `verify.py`.
 - `scripts/doctor.py` — one-command health check: runs everything CI runs (ruff, pytest, `check_tools --strict`, every example's `verify.py`, scaffold-drift). Use before pushing. `--fix` auto-applies ruff fixes.
+- `scripts/probe_webhook.py` — verify a deployed webhook is alive + verifying signatures, without needing CMA access. Runs unsigned heartbeat (expect 401) + optionally a signed non-`run_started` event (expect 200 ignored). Closes the Level 2 → Level 3 gap.
 - `docs/rollout.md` — when to use this kit vs Anthropic-managed sandboxes, plus a workshop-wide rollout plan
 - `MIGRATING.md` — kit-author checklist: 13 ticks across Level 1 (offline), Level 2 (Modal deploy), Level 3 (live CMA), plus common gotchas and a validation-gates summary
 - `examples/internal_data_kit/` — worked Phase 2 migration: tools reading a bundled dataset, wired into the worker via `tools=`, Level-1 verifiable with no CMA account
