@@ -43,6 +43,9 @@ async def lookup(order_id: str) -> str:
 
     Args:
         order_id: The order id.
+
+    Returns:
+        A summary string.
     """
     return f"order {order_id}"
 
@@ -78,21 +81,21 @@ def test_missing_param_type_annotation(tmp_path):
     )
 
 
+_CLEAN_DOCSTRING = (
+    '"""Look up an order.\n\n    Args:\n        order_id: The order id.\n\n'
+    '    Returns:\n        A summary string.\n    """'
+)
+
+
 def test_missing_docstring(tmp_path):
-    body = CLEAN.replace(
-        '"""Look up an order.\n\n    Args:\n        order_id: The order id.\n    """',
-        "",
-    )
+    body = CLEAN.replace(_CLEAN_DOCSTRING, "")
     issues = check_file(_write(tmp_path, body))
     # has_params -> missing docstring is an ERROR, not a WARNING
     assert "ERROR" in _severities(issues, "has no docstring")
 
 
 def test_missing_args_section_is_warning(tmp_path):
-    body = CLEAN.replace(
-        '"""Look up an order.\n\n    Args:\n        order_id: The order id.\n    """',
-        '"""Look up an order."""',
-    )
+    body = CLEAN.replace(_CLEAN_DOCSTRING, '"""Look up an order."""')
     issues = check_file(_write(tmp_path, body))
     # has_params + has docstring + no Args: -> WARNING
     assert _severities(issues, "no 'Args:' section") == ["WARNING"]
@@ -127,6 +130,9 @@ async def orphan(x: str) -> str:
 
     Args:
         x: A value.
+
+    Returns:
+        The value.
     """
     return x
 
@@ -179,6 +185,9 @@ async def orphan(x: str) -> str:
 
     Args:
         x: A value.
+
+    Returns:
+        The value.
     """
     return x
 
@@ -204,6 +213,9 @@ async def lookup(order_id: str) -> str:
 
     Args:
         order_id: The order id.
+
+    Returns:
+        A summary string.
     """
     return f"order {order_id}"
 
@@ -252,6 +264,9 @@ async def first(x: str) -> str:
 
     Args:
         x: A value.
+
+    Returns:
+        The value.
     """
     return x
 
@@ -262,6 +277,9 @@ async def second(y: str) -> str:
 
     Args:
         y: A value.
+
+    Returns:
+        The value.
     """
     return y
 
@@ -286,6 +304,9 @@ async def lookup(order_id: str) -> str:
 
     Args:
         order_id: The order id.
+
+    Returns:
+        A summary string.
     """
     return f"order {order_id}"
 
@@ -296,6 +317,57 @@ KIT_TOOLS = []
     # Because `lookup` is NOT recognised as a tool, KIT_TOOLS = [] is flagged
     # for being empty -- but no per-tool rule should have fired against `lookup`.
     assert all("tool 'lookup'" not in i.message for i in issues)
+
+
+# --------------------------------------------------------------------------- #
+# New rules: snake_case, return-type annotation, Returns: section
+# --------------------------------------------------------------------------- #
+def test_camel_case_tool_name_is_warning(tmp_path):
+    body = CLEAN.replace("async def lookup(", "async def lookUpOrder(").replace(
+        "KIT_TOOLS = [lookup]", "KIT_TOOLS = [lookUpOrder]"
+    )
+    issues = check_file(_write(tmp_path, body))
+    assert "WARNING" in _severities(issues, "is not snake_case")
+
+
+def test_pascal_case_tool_name_is_warning(tmp_path):
+    body = CLEAN.replace("async def lookup(", "async def LookupOrder(").replace(
+        "KIT_TOOLS = [lookup]", "KIT_TOOLS = [LookupOrder]"
+    )
+    issues = check_file(_write(tmp_path, body))
+    assert "WARNING" in _severities(issues, "is not snake_case")
+
+
+def test_single_word_snake_case_is_fine(tmp_path):
+    # "lookup" on its own is valid snake_case (no warning).
+    issues = check_file(_write(tmp_path, CLEAN))
+    assert not _severities(issues, "is not snake_case")
+
+
+def test_missing_return_type_annotation_is_warning(tmp_path):
+    body = CLEAN.replace(
+        "async def lookup(order_id: str) -> str:",
+        "async def lookup(order_id: str):",
+    )
+    issues = check_file(_write(tmp_path, body))
+    assert "WARNING" in _severities(issues, "missing a return-type annotation")
+
+
+def test_missing_returns_section_is_warning(tmp_path):
+    body = CLEAN.replace(
+        _CLEAN_DOCSTRING,
+        '"""Look up an order.\n\n    Args:\n        order_id: The order id.\n    """',
+    )
+    issues = check_file(_write(tmp_path, body))
+    assert "WARNING" in _severities(issues, "no 'Returns:' section")
+
+
+def test_returns_section_without_docstring_does_not_double_warn(tmp_path):
+    # If the docstring is absent entirely, only the "no docstring" issue
+    # fires; we don't want a redundant "no Returns:" warning piled on top.
+    body = CLEAN.replace(_CLEAN_DOCSTRING, "")
+    issues = check_file(_write(tmp_path, body))
+    assert not _severities(issues, "no 'Returns:' section")
 
 
 @pytest.mark.parametrize(

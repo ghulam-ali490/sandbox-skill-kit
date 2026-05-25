@@ -61,6 +61,9 @@ async def get_employee(employee_id: str) -> str:
 
     Args:
         employee_id: Internal employee id, e.g. "EMP-101".
+
+    Returns:
+        One-line summary with name, department, and manager id, or a not-found message.
     """
     row = await asyncio.to_thread(
         _query_one,
@@ -82,6 +85,9 @@ async def list_open_incidents(severity: str = "high") -> str:
 
     Args:
         severity: Severity to filter by, e.g. "high", "medium", "low". Default "high".
+
+    Returns:
+        Count + comma-separated "id(summary)" list, or a no-match message.
     """
     rows = await asyncio.to_thread(
         _query_all,

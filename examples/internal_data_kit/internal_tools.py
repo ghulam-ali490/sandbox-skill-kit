@@ -32,6 +32,9 @@ async def lookup_order_status(order_id: str) -> str:
 
     Args:
         order_id: Internal order id, e.g. "ORD-1001".
+
+    Returns:
+        One-line summary with status, carrier, and ETA, or a not-found message.
     """
     order = _load().get("orders", {}).get(order_id)
     if order is None:
@@ -47,6 +50,9 @@ async def list_low_stock_skus(threshold: int = 5) -> str:
 
     Args:
         threshold: Stock level at or below which a SKU is reported (default 5).
+
+    Returns:
+        Comma-separated "sku=qty" pairs for matching SKUs, or a no-match message.
     """
     inventory = _load().get("inventory", {})
     low = {sku: qty for sku, qty in inventory.items() if qty <= threshold}

@@ -55,6 +55,9 @@ async def list_objects(prefix: str = "") -> str:
 
     Args:
         prefix: Key prefix to match. Default "" (all keys).
+
+    Returns:
+        Count + comma-separated "key (sizeB)" list, or a no-match message.
     """
     matches = sorted(k for k in _bucket() if k.startswith(prefix))
     if not matches:
@@ -69,6 +72,9 @@ async def get_object_metadata(key: str) -> str:
 
     Args:
         key: Full object key, e.g. "reports/2026-q1.pdf".
+
+    Returns:
+        One-line summary with size, content_type, and modified timestamp, or a not-found message.
     """
     obj = _bucket().get(key)
     if obj is None:

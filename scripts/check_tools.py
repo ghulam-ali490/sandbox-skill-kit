@@ -7,13 +7,20 @@ statically (AST-only, no import) so an author sees them before running
   - Tool names that collide with the default agent toolset
     (`bash`/`read`/`write`/`edit`/`glob`/`grep`). The factory builds a flat
     list -- whichever name lands first wins, your tool stays dark.
+  - Tool names that are not snake_case. The agent's JSON tool calls use
+    the function name verbatim; mixed casing breaks the convention every
+    other tool in the toolset follows.
   - Tool functions decorated with ``@beta_async_tool`` that are NOT async.
     The decorator wraps async functions; sync ones are silently broken.
   - Tool parameters missing a type annotation. The decorator infers the
     JSON input schema from type hints.
+  - Tool functions missing a return-type annotation. The decorator uses
+    it to populate the tool's output schema.
   - Missing docstring or missing ``Args:`` section. The decorator infers the
     tool description from the docstring and parameter descriptions from the
     Args block.
+  - Docstring missing a ``Returns:`` section. The decorator surfaces it to
+    the agent so it knows what the tool will hand back.
   - Missing or empty ``KIT_TOOLS`` export.
   - ``KIT_TOOLS`` entries that don't reference a decorated tool in this
     file, or decorated tools that aren't in ``KIT_TOOLS`` (orphans the
@@ -35,6 +42,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -57,6 +65,12 @@ DEFAULT_TOOL_NAMES = frozenset({"bash", "read", "write", "edit", "glob", "grep"}
 # Decorator names we recognise as marking a tool. Aliased imports are added
 # per-file by ``_collect_decorator_aliases``; this is the baseline.
 TOOL_DECORATORS = frozenset({"beta_async_tool"})
+
+# Snake-case identifier: lowercase letters / digits / underscore, must start
+# with a letter, must not have consecutive underscores or trail in underscore
+# (loose enough for the patterns the kit uses; strict enough to catch
+# camelCase / PascalCase / kebab-case from authors switching from other SDKs).
+SNAKE_CASE_RE = re.compile(r"^[a-z][a-z0-9]*(_[a-z0-9]+)*$")
 
 
 @dataclass(frozen=True)
@@ -104,6 +118,12 @@ def _has_args_section(docstring: str | None) -> bool:
     return any(line.strip() == "Args:" for line in docstring.splitlines())
 
 
+def _has_returns_section(docstring: str | None) -> bool:
+    if not docstring:
+        return False
+    return any(line.strip() == "Returns:" for line in docstring.splitlines())
+
+
 def _check_tool_func(func: ast.AsyncFunctionDef | ast.FunctionDef) -> list[Issue]:
     issues: list[Issue] = []
     name = func.name
@@ -116,6 +136,17 @@ def _check_tool_func(func: ast.AsyncFunctionDef | ast.FunctionDef) -> list[Issue
                 f"tool '{name}' collides with the default toolset name "
                 f"'{name}' -- rename it (default tools: "
                 f"{', '.join(sorted(DEFAULT_TOOL_NAMES))}).",
+            )
+        )
+
+    if not SNAKE_CASE_RE.fullmatch(name):
+        issues.append(
+            Issue(
+                "WARNING",
+                func.lineno,
+                f"tool '{name}' is not snake_case -- the agent's tool calls "
+                "use the function name verbatim; mixed casing breaks the "
+                "convention every default tool follows.",
             )
         )
 
@@ -140,6 +171,16 @@ def _check_tool_func(func: ast.AsyncFunctionDef | ast.FunctionDef) -> list[Issue
                 )
             )
 
+    if func.returns is None:
+        issues.append(
+            Issue(
+                "WARNING",
+                func.lineno,
+                f"tool '{name}' is missing a return-type annotation; the "
+                "decorator uses it to populate the tool's output schema.",
+            )
+        )
+
     docstring = ast.get_docstring(func)
     has_params = bool(func.args.args)
     if not docstring:
@@ -158,6 +199,16 @@ def _check_tool_func(func: ast.AsyncFunctionDef | ast.FunctionDef) -> list[Issue
                 func.lineno,
                 f"tool '{name}' docstring has no 'Args:' section; "
                 "parameter descriptions will be empty in the schema.",
+            )
+        )
+
+    if docstring and not _has_returns_section(docstring):
+        issues.append(
+            Issue(
+                "WARNING",
+                func.lineno,
+                f"tool '{name}' docstring has no 'Returns:' section; the "
+                "agent will not know what the tool hands back.",
             )
         )
 

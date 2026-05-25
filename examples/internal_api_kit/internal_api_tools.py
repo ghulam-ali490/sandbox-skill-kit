@@ -45,6 +45,9 @@ async def get_customer(customer_id: str) -> str:
 
     Args:
         customer_id: Internal customer id, e.g. "CUST-42".
+
+    Returns:
+        One-line summary with name, tier, and open ticket count, or a not-found message.
     """
     resp = await _client().get(f"/customers/{customer_id}")
     if resp.status_code == 404:
@@ -63,6 +66,9 @@ async def search_tickets(status: str = "open") -> str:
 
     Args:
         status: Ticket status to filter by, e.g. "open" or "closed". Default "open".
+
+    Returns:
+        Count + comma-separated "id(priority)" list, or a no-match message.
     """
     resp = await _client().get("/tickets", params={"status": status})
     resp.raise_for_status()

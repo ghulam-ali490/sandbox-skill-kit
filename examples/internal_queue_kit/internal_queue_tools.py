@@ -48,6 +48,9 @@ async def enqueue_job(channel: str, payload: str) -> str:
     Args:
         channel: Channel name, e.g. "billing" or "video-encode".
         payload: Opaque job payload (the consumer interprets it).
+
+    Returns:
+        Confirmation with the new sequential job id and the updated channel depth.
     """
     queue = _store().setdefault(channel, [])
     job_id = f"job-{len(queue) + 1:04d}"
@@ -62,6 +65,9 @@ async def peek_pending_jobs(channel: str = "default", limit: int = 5) -> str:
     Args:
         channel: Channel name to peek. Default "default".
         limit: Max number of jobs to include in the summary. Default 5.
+
+    Returns:
+        Channel depth + head-of-queue "id(payload)" summary, or an empty-channel message.
     """
     queue = _store().get(channel, [])
     if not queue:

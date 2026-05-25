@@ -58,6 +58,12 @@ slate is stable.
   "decorator detection" limitation. New tests cover bare/aliased/short-alias/
   multiple-aliases paths and confirm an unrelated import aliased to the
   same local name is not treated as a kit tool.
+- `scripts/check_tools.py` gains three new rules (all WARNING so existing
+  kits keep working before they catch up): tool name must be `snake_case`;
+  tool function should have a return-type annotation; docstring should
+  include a `Returns:` section so the agent knows the shape of the response.
+  All five shipped examples were updated with `Returns:` sections so they
+  continue to pass `--strict` and remain valid copy targets.
 
 ## [0.1.0] - 2026-05-25
 
