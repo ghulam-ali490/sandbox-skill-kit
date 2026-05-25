@@ -19,6 +19,14 @@ slate is stable.
   `scripts/check_tools.py` default scan list, `tests/test_examples.py`,
   `tests/test_scaffold.py`, `tests/test_check_tools.py`, CI smoke, and the
   README / MIGRATING.md / docs/rollout.md pattern tables.
+- `scripts/doctor.py` -- one-command local health check. Runs ruff, pytest,
+  `check_tools.py --strict`, every example's `verify.py`, and the
+  scaffold-drift check in order with per-step PASS/FAIL + final tally.
+  `--fix` promotes the ruff step to `ruff check . --fix`. 8 tests cover
+  the `run_step` / `run_steps` primitives and the canonical step shape;
+  the script is intentionally NOT run from CI (CI already runs each
+  underlying check individually) but is the recommended pre-push gate
+  for contributors.
 
 ### Changed
 

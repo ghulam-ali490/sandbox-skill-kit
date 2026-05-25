@@ -144,6 +144,7 @@ client.beta.sessions.events.send(
 - `scripts/e2e_test.py` — Level 3 driver: fires a real session and asserts tools ran inside the Modal sandbox
 - `scripts/new_example.py` — scaffold a new example kit from one of the three Phase 2 templates: `python scripts/new_example.py my_kit --pattern db`
 - `scripts/check_tools.py` — pre-flight linter for `*_tools.py` modules: catches default-toolset name collisions, missing type hints / docstrings, KIT_TOOLS gaps. Run BEFORE `verify.py`.
+- `scripts/doctor.py` — one-command health check: runs everything CI runs (ruff, pytest, `check_tools --strict`, every example's `verify.py`, scaffold-drift). Use before pushing. `--fix` auto-applies ruff fixes.
 - `docs/rollout.md` — when to use this kit vs Anthropic-managed sandboxes, plus a workshop-wide rollout plan
 - `MIGRATING.md` — kit-author checklist: 13 ticks across Level 1 (offline), Level 2 (Modal deploy), Level 3 (live CMA), plus common gotchas and a validation-gates summary
 - `examples/internal_data_kit/` — worked Phase 2 migration: tools reading a bundled dataset, wired into the worker via `tools=`, Level-1 verifiable with no CMA account
@@ -189,6 +190,13 @@ pytest           # offline tests of verify / drain / get-or-create / routing
 ```
 
 These are exactly the checks CI runs on every push.
+
+Or run all of CI's checks in one go with the bundled doctor script:
+
+```shell
+python scripts/doctor.py            # ruff + pytest + check_tools + every example verify + scaffold drift
+python scripts/doctor.py --fix      # same, but auto-apply ruff fixes
+```
 
 ## Troubleshooting
 
