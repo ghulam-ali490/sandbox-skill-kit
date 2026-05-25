@@ -70,27 +70,41 @@ def _summarise(event) -> str:
     return t
 
 
-def main() -> int:
-    api_key = _need("ANTHROPIC_API_KEY")
-    environment_id = _need("ANTHROPIC_ENVIRONMENT_ID")
-    agent_id = os.environ.get("CMA_AGENT_ID")
+def _ensure_agent(client, agent_id: str | None) -> str:
+    """Return ``agent_id`` if set, otherwise create + return a minimal agent."""
+    if agent_id:
+        return agent_id
+    print("CMA_AGENT_ID not set -- creating a minimal bash-capable agent...")
+    agent = client.beta.agents.create(
+        name="sandbox-skill-kit-e2e",
+        model="claude-sonnet-4-6",
+        system=(
+            "You are a test agent. Use the bash tool to satisfy the user, "
+            "then answer briefly."
+        ),
+        tools=[{"type": "agent_toolset_20260401"}],
+    )
+    print(f"  created agent {agent.id}")
+    print(f"  (export CMA_AGENT_ID={agent.id} to reuse it next time)")
+    return agent.id
 
-    client = anthropic.Anthropic(api_key=api_key)
 
-    if not agent_id:
-        print("CMA_AGENT_ID not set -- creating a minimal bash-capable agent...")
-        agent = client.beta.agents.create(
-            name="sandbox-skill-kit-e2e",
-            model="claude-sonnet-4-6",
-            system=(
-                "You are a test agent. Use the bash tool to satisfy the user, "
-                "then answer briefly."
-            ),
-            tools=[{"type": "agent_toolset_20260401"}],
-        )
-        agent_id = agent.id
-        print(f"  created agent {agent_id}")
-        print(f"  (export CMA_AGENT_ID={agent_id} to reuse it next time)")
+def run(
+    client,
+    *,
+    agent_id: str | None,
+    environment_id: str,
+    prompt: str = PROMPT,
+    poll_seconds: float = POLL_SECONDS,
+    timeout_seconds: float = TIMEOUT_SECONDS,
+) -> int:
+    """Drive one Level 3 session and return the exit code.
+
+    Extracted from ``main()`` so it can be exercised against a stubbed
+    Anthropic client (see ``tests/test_e2e_dry_run.py``) -- which is how the
+    orchestration logic is unit-tested without real CMA access.
+    """
+    agent_id = _ensure_agent(client, agent_id)
 
     print(f"\nCreating session: agent={agent_id} environment={environment_id}")
     session = client.beta.sessions.create(
@@ -106,23 +120,26 @@ def main() -> int:
 
     client.beta.sessions.events.send(
         session.id,
-        events=[{"type": "user.message", "content": [{"type": "text", "text": PROMPT}]}],
+        events=[{"type": "user.message", "content": [{"type": "text", "text": prompt}]}],
     )
-    print(f"Sent prompt: {PROMPT}\n")
+    print(f"Sent prompt: {prompt}\n")
 
-    deadline = time.monotonic() + TIMEOUT_SECONDS
+    deadline = time.monotonic() + timeout_seconds
     last_status = None
+    reached_terminal = False
     while time.monotonic() < deadline:
         s = client.beta.sessions.retrieve(session.id)
         if s.status != last_status:
             print(f"[status] {s.status}")
             last_status = s.status
         if s.status in ("idle", "terminated"):
+            reached_terminal = True
             break
-        time.sleep(POLL_SECONDS)
-    else:
+        time.sleep(poll_seconds)
+
+    if not reached_terminal:
         print(
-            f"\nFAIL: session did not reach idle within {TIMEOUT_SECONDS}s "
+            f"\nFAIL: session did not reach idle within {timeout_seconds}s "
             f"(stuck at {last_status})."
         )
         print("Check `modal app logs cma-self-hosted-sandboxes` -- the webhook may not be firing.")
@@ -169,6 +186,15 @@ def main() -> int:
         "[webhook] acked + [runner] lines."
     )
     return 0
+
+
+def main() -> int:
+    api_key = _need("ANTHROPIC_API_KEY")
+    environment_id = _need("ANTHROPIC_ENVIRONMENT_ID")
+    agent_id = os.environ.get("CMA_AGENT_ID")
+
+    client = anthropic.Anthropic(api_key=api_key)
+    return run(client, agent_id=agent_id, environment_id=environment_id)
 
 
 if __name__ == "__main__":

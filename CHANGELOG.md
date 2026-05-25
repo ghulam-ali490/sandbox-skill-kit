@@ -6,7 +6,27 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-_No unreleased changes._
+### Added
+
+- **Level 3 dry-run** (`tests/test_e2e_dry_run.py` + a `FakeAnthropic`
+  fake). Closes the v0.1 and v0.2 "Level 3 not exercised end-to-end"
+  known limitation as far as is possible without Anthropic Research
+  Preview access. 9 cases exercise `scripts/e2e_test.run()` against a
+  scripted Anthropic SDK stub: happy path (tool_use + idle), terminated
+  status also passes, auto-creates an agent when `CMA_AGENT_ID` unset,
+  no-tool-use fails with the right hint, error event fails, timeout
+  produces the "webhook may not be firing" hint, status transitions are
+  logged once per change, and the `user.message` prompt is sent as a
+  content-block list (not a bare string -- a real SDK gotcha caught by
+  this test).
+
+### Changed
+
+- `scripts/e2e_test.py` refactored: orchestration extracted into
+  `run(client, *, agent_id, environment_id, prompt, poll_seconds,
+  timeout_seconds)`. `main()` is now a thin env-parsing + client-
+  construction wrapper. Behaviour unchanged for live use; the refactor
+  is what makes the dry-run possible.
 
 ## [0.2.0] - 2026-05-25
 
