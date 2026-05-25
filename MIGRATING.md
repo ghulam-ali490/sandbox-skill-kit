@@ -79,6 +79,13 @@ through 7 are reachable with no Modal account and no CMA access (Level 1).
   yours (a handful of records covering the happy path, a not-found case,
   and any filter branches your tools have).
 
+  **Also update the assertions:** change `EXPECTED_CUSTOM = {...}` at the
+  top of `verify.py` to your renamed tool names, and rewrite the section 3
+  assertions (`if "shipped" not in str(...)` style) to check the strings
+  your tools actually return. `verify.py` is intentionally strict so the
+  scaffold's placeholder names don't silently bleed through after you
+  rename them.
+
 - [ ] **6a. Pre-flight your tools module** with the static linter:
   ```shell
   python scripts/check_tools.py examples/my_kit/my_kit_tools.py

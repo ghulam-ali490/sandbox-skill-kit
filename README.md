@@ -120,6 +120,16 @@ You should see `[webhook] acked work=... session=... sandbox=sb-...` and then
 `[runner] ...` lines from the sandbox itself, and the driver should end with
 `PASS: agent executed tools inside the self-hosted Modal sandbox`.
 
+### 7. Add YOUR kit's tools
+
+Steps 1-6 deploy the kit running only the default agent toolset
+(`bash`/`read`/`write`/`edit`/`glob`/`grep`). To make the agent reach
+private data your kit owns, follow [MIGRATING.md](MIGRATING.md) -- 13
+ticks across Level 0 (lint), Level 1 (offline verify), Level 2 (Modal
+deploy with your tools bundled), and Level 3 (live e2e). The scaffold
+script (`python scripts/new_example.py my_kit --pattern db`) generates a
+runnable starting point from one of five worked example patterns.
+
 Under the hood the driver does the equivalent of:
 
 ```py

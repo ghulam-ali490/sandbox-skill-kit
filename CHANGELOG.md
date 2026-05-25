@@ -27,6 +27,26 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   timeout_seconds)`. `main()` is now a thin env-parsing + client-
   construction wrapper. Behaviour unchanged for live use; the refactor
   is what makes the dry-run possible.
+- **Adopter-experience pass** (from an end-to-end dry-run walking the kit
+  cold):
+  - `scripts/new_example.py` now writes an adopter-focused `README.md`
+    into each scaffolded kit instead of copying the template's verbatim.
+    The old behaviour left broken relative links to `../internal_*_kit/`,
+    an irrelevant "which to copy" table, and a made-up scenario; the
+    new README has a 7-step "what to do next" checklist + a pointer to
+    the canonical example in the upstream repo.
+  - Scaffolded tools module now gets a `# TODO (adopter): replace the
+    placeholder tools below ...` marker on line 1 so the edit intent is
+    obvious on open.
+  - README `## Quickstart` gains a final step 7 telling adopters that
+    steps 1-6 deploy the base kit only and they need to follow
+    `MIGRATING.md` to wire their own tools.
+  - `MIGRATING.md` step 5 now explicitly tells adopters to update
+    `EXPECTED_CUSTOM` and the section-3 assertions in `verify.py` when
+    they rename tools (previously the doc only mentioned the offline
+    fixture).
+  - `tests/test_scaffold.py` asserts the new adopter README shape +
+    the TODO marker presence.
 
 ## [0.2.0] - 2026-05-25
 

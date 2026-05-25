@@ -90,7 +90,71 @@ def scaffold(kit_name: str, pattern: str, dest: Path) -> Path:
         if new_text != text:
             path.write_text(new_text, encoding="utf-8")
 
+    # 3. Overwrite README.md with an adopter-focused one. The template's README
+    #    is great as documentation of the canonical example, but inside a
+    #    scaffolded kit it has broken relative links to the OTHER example
+    #    directories, an irrelevant "which to copy" table, and a made-up
+    #    scenario. Replace it with a short edit checklist.
+    (target / "README.md").write_text(
+        _adopter_readme(kit_name, pattern, old_kit_dir), encoding="utf-8"
+    )
+
+    # 4. Add a one-line TODO marker to the top of the tools module so the
+    #    "edit this file" intent is obvious. Insert above the existing
+    #    docstring; do not touch the docstring itself (the template prose is
+    #    useful reference material in place).
+    tools_path = target / f"{new_module}.py"
+    tools_path.write_text(
+        "# TODO (adopter): replace the placeholder tools below with your "
+        "real ones; see README.md for the full checklist.\n"
+        + tools_path.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
     return target
+
+
+_REPO_URL = "https://github.com/ghulam-ali490/sandbox-skill-kit"
+
+
+def _adopter_readme(kit_name: str, pattern: str, template_dir_name: str) -> str:
+    """Generate a short adopter-focused README to overwrite the template's."""
+    return f"""# {kit_name}
+
+Scaffolded from the **{pattern}** template in [sandbox-skill-kit]({_REPO_URL}).
+
+## What to do next
+
+1. **Edit `{kit_name}_tools.py`** -- replace the two placeholder tools with
+   the ones your kit actually needs. Each must be `async def` decorated with
+   `@beta_async_tool`; the docstring's `Args:` and `Returns:` sections are
+   what the agent sees.
+2. **Update `KIT_TOOLS`** at the bottom of the tools module to list the
+   tools you want exposed.
+3. **Update `verify.py`** -- change `EXPECTED_CUSTOM` to match your new
+   tool names, and replace the assertions in section 3 with checks for
+   your real tool I/O. (verify.py is intentionally strict so an
+   uninstalled rename is caught immediately.)
+4. (For api/db/queue/s3 patterns) **Update the env var names** in
+   `{kit_name}_tools.py` to whatever your service expects, then mirror
+   them in `sandbox_runner.py`'s `_create_sandbox` env-injection note.
+5. **Pre-flight lint:**
+   ```shell
+   python scripts/check_tools.py path/to/{kit_name}_tools.py
+   ```
+6. **Run verify:** `python verify.py` from inside this directory should
+   print `PASS:` once your tools, fixtures, and assertions all line up.
+7. **Wire your kit into the sandbox** -- see [MIGRATING.md]({_REPO_URL}/blob/main/MIGRATING.md)
+   steps 8 onwards for the `modal_sandbox_webhook.py` edits + deploy +
+   Level 3 e2e test.
+
+## About this scaffold
+
+Pattern: `{pattern}` (one of five worked references in the upstream repo).
+The original template lives at `examples/{template_dir_name}/` in
+[sandbox-skill-kit]({_REPO_URL}) -- refer to its README for design rationale
+and the offline-verify pattern.
+"""
 
 
 def main(argv: list[str] | None = None) -> int:

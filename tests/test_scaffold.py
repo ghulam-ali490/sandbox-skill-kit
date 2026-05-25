@@ -56,6 +56,18 @@ def test_scaffold_produces_a_runnable_kit(pattern, tmp_path):
     verify_text = (kit / "verify.py").read_text(encoding="utf-8")
     assert "import acme_billing_tools" in verify_text
 
+    # Scaffolded README is the adopter-focused one (NOT the template's).
+    readme_text = (kit / "README.md").read_text(encoding="utf-8")
+    assert readme_text.startswith("# acme_billing\n")
+    assert f"Scaffolded from the **{pattern}** template" in readme_text
+    # Adopter-focused README must not leak the template's "which to copy"
+    # comparison table (that table is meaningless inside an adopter's kit).
+    assert "Use whichever example matches your kit" not in readme_text
+    # Tools module has the TODO marker on line 1 so the adopter sees it
+    # immediately on open.
+    tools_text = (kit / "acme_billing_tools.py").read_text(encoding="utf-8")
+    assert tools_text.startswith("# TODO (adopter):")
+
     # The scaffolded tool module loads and exports the expected surface.
     tools = _import_from_path(
         f"scaffold_test_{pattern}_tools", kit / "acme_billing_tools.py"
