@@ -48,6 +48,35 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - `tests/test_scaffold.py` asserts the new adopter README shape +
     the TODO marker presence.
 
+### Fixed
+
+- **Bug hunt pass** (from a critical-eye read of every kit-owned file):
+  - `modal_sandbox_webhook.py` `_verify_webhook` now catches
+    `UnicodeDecodeError` alongside the existing signature-failure
+    exceptions. Adversarial non-UTF-8 webhook bodies previously crashed
+    the handler with a 500 (leaking "the server crashed handling this");
+    they now reject as 401 like any other bad delivery. Regression test
+    `test_verify_webhook_non_utf8_body_raises_401` in
+    `tests/test_webhook_flow.py`.
+  - `modal_sandbox_webhook.py` `_drain_work` now returns skipped
+    (non-session) work items in its result list with `skipped=True`, so
+    operators can see "I skipped N non-session items" instead of having
+    to grep the logs. Also documents WHY processing is serial (TOCTOU
+    on `_find_live_sandbox` for duplicate session_id under redelivery /
+    retry).
+  - `scripts/validate.py` had a `REQUIRED_KEYS` constant and a docstring
+    claim that the secret's contents were checked. Modal's CLI does not
+    expose secret contents, so the check was impossible to implement.
+    Removed the dead constant; updated the docstring to be honest about
+    what is actually checked.
+  - `scripts/bootstrap.sh` previously ran `python scripts/validate.py
+    || { print 'ignore that failure' }`, which silently swallowed real
+    failures (SDK missing, modal not authed) alongside the expected
+    "secret does not exist yet" failure on first run. Now runs only the
+    pre-secret checks (SDK + Modal auth + env key shape) and HALTS on
+    those failures; the secret-exists check is deferred to the post-
+    deploy `python scripts/validate.py` run.
+
 ## [0.2.0] - 2026-05-25
 
 Second tagged release. Extends the example pattern catalogue to five

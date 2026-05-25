@@ -97,6 +97,21 @@ def test_verify_webhook_unexpected_error_propagates():
         m._verify_webhook(client, b"{}", {})
 
 
+def test_verify_webhook_non_utf8_body_raises_401():
+    # Adversarial non-UTF-8 input must reject as 401 (same shape of badness
+    # as a bad signature), not propagate the UnicodeDecodeError as a 500
+    # (which would leak "the server crashed handling this"). The MagicMock
+    # client never gets called because the decode fails first.
+    client = MagicMock()
+    invalid_utf8 = b"\xff\xfe\xfd not utf-8"
+
+    with pytest.raises(HTTPException) as exc:
+        m._verify_webhook(client, invalid_utf8, {})
+    assert exc.value.status_code == 401
+    # Confirm unwrap was never reached -- the decode short-circuited.
+    client.beta.webhooks.unwrap.assert_not_called()
+
+
 # --------------------------------------------------------------------------- #
 # _process_work_item  (get-or-create)
 # --------------------------------------------------------------------------- #
@@ -147,7 +162,10 @@ async def test_drain_skips_non_session_work(monkeypatch):
 
     out = await m._drain_work(client, "env_test")
 
-    assert out == []
+    # Skipped items are now returned (with skipped=True) so the caller has
+    # visibility into how many work items were ignored. _process_work_item
+    # must still not be called for non-session work.
+    assert out == [{"work_id": "w1", "type": "not-a-session", "skipped": True}]
     process.assert_not_called()
 
 

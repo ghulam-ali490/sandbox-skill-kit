@@ -28,10 +28,18 @@ require_env ANTHROPIC_ENVIRONMENT_KEY
 
 WEBHOOK_SECRET="${ANTHROPIC_WEBHOOK_SECRET:-placeholder}"
 
-echo "==> Validating prerequisites..."
-python scripts/validate.py || {
-  echo "Skipping the secret check on first run is fine; ignore that failure." >&2
-}
+echo "==> Validating prerequisites (SDK + Modal auth; secret check is allowed to fail on first run)..."
+# Run only the checks that should not yet need the Modal Secret -- the
+# secret-exists check is allowed to fail here because we're about to create
+# it. Other failures (SDK missing, modal CLI not authed) are real and must
+# abort the bootstrap.
+python - <<'PY' || { echo "ERROR: prerequisite check failed. Fix the issue above before re-running." >&2; exit 1; }
+import sys
+sys.path.insert(0, "scripts")
+from validate import check_anthropic_sdk, check_modal_auth, check_env_key_shape
+ok = check_anthropic_sdk() and check_modal_auth() and check_env_key_shape()
+sys.exit(0 if ok else 1)
+PY
 
 echo "==> Creating / updating Modal Secret ${SECRET_NAME}..."
 modal secret create "${SECRET_NAME}" \

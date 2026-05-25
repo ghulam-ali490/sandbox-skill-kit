@@ -4,11 +4,13 @@ Run before `modal deploy modal_sandbox_webhook.py`. Confirms:
   1. anthropic SDK is installed and >= 0.103.1 (the version that ships the
      `client.beta.environments.work.worker` helper).
   2. modal SDK is installed and the workspace is authenticated.
-  3. The `cma-self-hosted-sandboxes-secrets` Modal Secret exists with the
-     three required keys: ANTHROPIC_WEBHOOK_SECRET, ANTHROPIC_ENVIRONMENT_ID,
-     ANTHROPIC_ENVIRONMENT_KEY.
-  4. ANTHROPIC_ENVIRONMENT_KEY has the expected `sk-ant-oat-` prefix
-     (environment keys are NOT org API keys).
+  3. The `cma-self-hosted-sandboxes-secrets` Modal Secret EXISTS (Modal's
+     CLI does not expose the secret's keys, so the contents -- the three
+     ANTHROPIC_* values -- can only be validated at container start).
+  4. ANTHROPIC_ENVIRONMENT_KEY has the expected `sk-ant-oat-` prefix when
+     it is exported in the local shell (the real key in the Modal Secret
+     is not readable via CLI; this catches the common "pasted my org key
+     by mistake" slip while testing).
 """
 from __future__ import annotations
 
@@ -20,11 +22,6 @@ import sys
 from collections.abc import Callable
 
 SECRET_NAME = "cma-self-hosted-sandboxes-secrets"
-REQUIRED_KEYS = (
-    "ANTHROPIC_WEBHOOK_SECRET",
-    "ANTHROPIC_ENVIRONMENT_ID",
-    "ANTHROPIC_ENVIRONMENT_KEY",
-)
 MIN_SDK = (0, 103, 1)
 
 

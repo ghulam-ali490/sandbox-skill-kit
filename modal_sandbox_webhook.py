@@ -93,10 +93,13 @@ def _verify_webhook(
 
     try:
         return client.beta.webhooks.unwrap(raw.decode(), headers=headers)
-    except (WebhookVerificationError, KeyError) as e:
+    except (WebhookVerificationError, KeyError, UnicodeDecodeError) as e:
         # Messages are signature/config shaped, never the request body — safe
         # to log. Other exceptions propagate (they indicate a bug, not a bad
-        # delivery).
+        # delivery). UnicodeDecodeError covers adversarial non-UTF-8 bodies:
+        # a real Anthropic webhook is always UTF-8 JSON, so a decode failure
+        # is the same shape of badness as a bad signature -- reject as 401,
+        # not 500 (which would leak "the server crashed handling this").
         print(f"[webhook] signature reject: {type(e).__name__}: {e}", flush=True)
         raise HTTPException(
             status_code=401, detail="signature verification failed"
@@ -203,10 +206,18 @@ async def _drain_work(
     must not terminate the lease out from under it. Items the poller already
     ack'd that then fail to spawn are logged and skipped; they reclaim on the
     next webhook (``reclaim_older_than_ms``) once the lease lapses.
+
+    Items are processed **serially**, not via ``asyncio.gather``, because
+    ``_process_work_item`` is a get-or-create on ``modal.Sandbox.from_name``
+    keyed by session_id: two parallel work items with the same session_id
+    (Anthropic redelivery, retry-after-restart) would both miss the existing
+    sandbox in the find step and race to create duplicates. Serial draining
+    closes the TOCTOU window.
     """
     environment_key = os.environ["ANTHROPIC_ENVIRONMENT_KEY"]
     spawned: list[dict] = []
     failed: list[dict] = []
+    skipped: list[dict] = []
     async for work in client.beta.environments.work.poller(
         environment_id=environment_id,
         environment_key=environment_key,
@@ -219,6 +230,9 @@ async def _drain_work(
         if work.data.type != "session":
             print(
                 f"[webhook] skipping work={work.id} type={work.data.type}", flush=True
+            )
+            skipped.append(
+                {"work_id": work.id, "type": work.data.type, "skipped": True}
             )
             continue
         session_id = work.data.id
@@ -242,12 +256,13 @@ async def _drain_work(
             failed.append(
                 {"work_id": work.id, "session_id": session_id, "error": detail}
             )
-    if failed:
+    if failed or skipped:
         print(
-            f"[webhook] drain finished: spawned={len(spawned)} failed={len(failed)}",
+            f"[webhook] drain finished: spawned={len(spawned)} "
+            f"failed={len(failed)} skipped={len(skipped)}",
             flush=True,
         )
-    return spawned + failed
+    return spawned + failed + skipped
 
 
 @app.function(image=webhook_image, secrets=[secrets])
