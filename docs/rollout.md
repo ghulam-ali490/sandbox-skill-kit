@@ -56,7 +56,7 @@ a `SKILL.md` plus markdown resources and have no tool functions, so there is
 nothing to wrap into `worker(...)`. Phase 2 is therefore deferred until a kit
 that actually serves internal-data tools exists.
 
-To keep the pattern ready, the migration is captured as three worked
+To keep the pattern ready, the migration is captured as four worked
 references, each Level-1 verified with no CMA account. The first tool-bearing
 kit copies whichever matches how its tools read data; the live "run for a
 week" step still needs CMA access.
@@ -73,10 +73,14 @@ week" step still needs CMA access.
   offline against an in-memory seeded sqlite, with the same injectable-factory
   pattern as the API example
   (`python examples/internal_db_kit/verify.py`).
+- [`../examples/internal_queue_kit/`](../examples/internal_queue_kit/README.md) —
+  tools pushing to / peeking at a **private message queue** with a
+  sandbox-only URL; verifiable offline against a seeded in-memory store
+  (`python examples/internal_queue_kit/verify.py`).
 
-All three reduce to the same one-line change: keep `worker()`, pass a `tools=`
-factory. The API and DB examples add only the env-configured credential
-contract (token vs. DSN).
+All four reduce to the same one-line change: keep `worker()`, pass a `tools=`
+factory. The API / DB / queue examples add only the env-configured credential
+contract (token vs. DSN vs. URL).
 
 When a kit is ready to migrate for real, the step-by-step from scaffold to
 live CMA session is in [`../MIGRATING.md`](../MIGRATING.md) (13-tick

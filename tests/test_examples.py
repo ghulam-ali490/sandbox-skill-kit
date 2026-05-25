@@ -237,3 +237,67 @@ async def test_db_list_open_low(db_tools):
 async def test_db_list_open_unknown_severity(db_tools):
     res = await db_tools.list_open_incidents.call({"severity": "medium"})
     assert "No open incidents at severity 'medium'" in res
+
+
+# --------------------------------------------------------------------------- #
+# internal_queue_kit (private message queue; in-memory dict stands in)
+# --------------------------------------------------------------------------- #
+@pytest.fixture(scope="function")
+def queue_tools():
+    """Fresh seeded store per test so enqueue mutations don't bleed across cases."""
+    mod = _load(
+        "ex_internal_queue_tools",
+        EXAMPLES / "internal_queue_kit" / "internal_queue_tools.py",
+    )
+    store: dict[str, list[dict]] = {
+        "billing": [
+            {"id": "job-0001", "payload": "invoice_send acct_42"},
+            {"id": "job-0002", "payload": "invoice_send acct_43"},
+        ],
+    }
+    mod._store = lambda: store
+    return mod
+
+
+async def test_queue_peek_seeded_channel(queue_tools):
+    res = await queue_tools.peek_pending_jobs.call({"channel": "billing"})
+    assert "depth=2" in res
+    assert "job-0001" in res
+    assert "job-0002" in res
+
+
+async def test_queue_peek_empty_channel(queue_tools):
+    res = await queue_tools.peek_pending_jobs.call({"channel": "no-such"})
+    assert "is empty" in res
+
+
+async def test_queue_peek_default_channel(queue_tools):
+    # default channel name is "default" which is absent in the fixture -> empty branch
+    res = await queue_tools.peek_pending_jobs.call({})
+    assert "Channel 'default' is empty" in res
+
+
+async def test_queue_peek_respects_limit(queue_tools):
+    res = await queue_tools.peek_pending_jobs.call({"channel": "billing", "limit": 1})
+    assert "job-0001" in res
+    assert "job-0002" not in res
+
+
+async def test_queue_enqueue_generates_sequential_id(queue_tools):
+    res = await queue_tools.enqueue_job.call(
+        {"channel": "billing", "payload": "invoice_send acct_44"}
+    )
+    assert "job-0003" in res
+    assert "depth=3" in res
+
+
+async def test_queue_enqueue_creates_new_channel(queue_tools):
+    res = await queue_tools.enqueue_job.call(
+        {"channel": "video-encode", "payload": "render fhd"}
+    )
+    assert "job-0001" in res  # first job on a fresh channel
+    assert "depth=1" in res
+    # Confirm a subsequent peek sees it.
+    peek = await queue_tools.peek_pending_jobs.call({"channel": "video-encode"})
+    assert "depth=1" in peek
+    assert "render fhd" in peek

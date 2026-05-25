@@ -43,9 +43,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 EXAMPLES = REPO_ROOT / "examples"
 
 DEFAULT_EXAMPLE_TOOL_MODULES = [
-    EXAMPLES / "internal_data_kit" / "internal_tools.py",
-    EXAMPLES / "internal_api_kit"  / "internal_api_tools.py",
-    EXAMPLES / "internal_db_kit"   / "internal_db_tools.py",
+    EXAMPLES / "internal_data_kit"  / "internal_tools.py",
+    EXAMPLES / "internal_api_kit"   / "internal_api_tools.py",
+    EXAMPLES / "internal_db_kit"    / "internal_db_tools.py",
+    EXAMPLES / "internal_queue_kit" / "internal_queue_tools.py",
 ]
 
 # Names exposed by ``beta_agent_toolset_20260401(ctx)``. A collision means

@@ -25,9 +25,10 @@ staying on your infrastructure.
 
 | Your tools read from... | Pattern | Template |
 | --- | --- | --- |
-| A bundled file / static dataset | `data` | [`examples/internal_data_kit`](examples/internal_data_kit) |
-| A private HTTP API behind a token | `api`  | [`examples/internal_api_kit`](examples/internal_api_kit) |
-| A private database (Postgres, MySQL, sqlite, ...) | `db`   | [`examples/internal_db_kit`](examples/internal_db_kit) |
+| A bundled file / static dataset | `data`  | [`examples/internal_data_kit`](examples/internal_data_kit) |
+| A private HTTP API behind a token | `api`   | [`examples/internal_api_kit`](examples/internal_api_kit) |
+| A private database (Postgres, MySQL, sqlite, ...) | `db`    | [`examples/internal_db_kit`](examples/internal_db_kit) |
+| A private message queue (SQS / Redis / NATS / ...) | `queue` | [`examples/internal_queue_kit`](examples/internal_queue_kit) |
 
 If your kit has tools that span more than one of these, pick the most complex
 one (usually `db` or `api`) and add the simpler tools alongside; the

@@ -28,7 +28,7 @@ def _import_from_path(module_name: str, file_path: Path):
     return mod
 
 
-@pytest.mark.parametrize("pattern", ["data", "api", "db"])
+@pytest.mark.parametrize("pattern", ["data", "api", "db", "queue"])
 def test_scaffold_produces_a_runnable_kit(pattern, tmp_path):
     kit = scaffold("acme_billing", pattern, tmp_path)
 
@@ -42,7 +42,13 @@ def test_scaffold_produces_a_runnable_kit(pattern, tmp_path):
     # the template's original module names should leak through.
     runner_text = (kit / "sandbox_runner.py").read_text(encoding="utf-8")
     assert "from acme_billing_tools import KIT_TOOLS" in runner_text
-    for orig in ("internal_tools", "internal_api_tools", "internal_db_tools"):
+    template_modules = (
+        "internal_tools",
+        "internal_api_tools",
+        "internal_db_tools",
+        "internal_queue_tools",
+    )
+    for orig in template_modules:
         if orig != "acme_billing_tools":
             assert orig not in runner_text
 
@@ -74,4 +80,4 @@ def test_scaffold_rejects_bad_kit_name(tmp_path):
 
 def test_scaffold_rejects_unknown_pattern(tmp_path):
     with pytest.raises(SystemExit, match="Unknown pattern"):
-        scaffold("acme_billing", "queue", tmp_path)
+        scaffold("acme_billing", "definitely_not_a_pattern", tmp_path)

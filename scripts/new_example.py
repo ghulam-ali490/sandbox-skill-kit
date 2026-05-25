@@ -32,9 +32,10 @@ EXAMPLES = REPO_ROOT / "examples"
 # Each template is a (source dir, current tool-module file stem) pair. The
 # scaffold renames that file to ``<kit_name>_tools.py`` and updates references.
 TEMPLATES = {
-    "data": {"dir": EXAMPLES / "internal_data_kit", "tools_module": "internal_tools"},
-    "api":  {"dir": EXAMPLES / "internal_api_kit",  "tools_module": "internal_api_tools"},
-    "db":   {"dir": EXAMPLES / "internal_db_kit",   "tools_module": "internal_db_tools"},
+    "data":  {"dir": EXAMPLES / "internal_data_kit",  "tools_module": "internal_tools"},
+    "api":   {"dir": EXAMPLES / "internal_api_kit",   "tools_module": "internal_api_tools"},
+    "db":    {"dir": EXAMPLES / "internal_db_kit",    "tools_module": "internal_db_tools"},
+    "queue": {"dir": EXAMPLES / "internal_queue_kit", "tools_module": "internal_queue_tools"},
 }
 
 # Lowercase letters / digits / underscore; must start with a letter. Same

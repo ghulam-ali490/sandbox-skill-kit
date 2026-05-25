@@ -197,6 +197,7 @@ KIT_TOOLS = [lookup]
         "examples/internal_data_kit/internal_tools.py",
         "examples/internal_api_kit/internal_api_tools.py",
         "examples/internal_db_kit/internal_db_tools.py",
+        "examples/internal_queue_kit/internal_queue_tools.py",
     ],
 )
 def test_real_examples_are_clean(example_path):
