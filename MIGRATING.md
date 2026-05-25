@@ -29,6 +29,7 @@ staying on your infrastructure.
 | A private HTTP API behind a token | `api`   | [`examples/internal_api_kit`](examples/internal_api_kit) |
 | A private database (Postgres, MySQL, sqlite, ...) | `db`    | [`examples/internal_db_kit`](examples/internal_db_kit) |
 | A private message queue (SQS / Redis / NATS / ...) | `queue` | [`examples/internal_queue_kit`](examples/internal_queue_kit) |
+| A private object store (S3 / GCS / R2 / MinIO / ...) | `s3`    | [`examples/internal_s3_kit`](examples/internal_s3_kit) |
 
 If your kit has tools that span more than one of these, pick the most complex
 one (usually `db` or `api`) and add the simpler tools alongside; the

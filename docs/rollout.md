@@ -56,7 +56,7 @@ a `SKILL.md` plus markdown resources and have no tool functions, so there is
 nothing to wrap into `worker(...)`. Phase 2 is therefore deferred until a kit
 that actually serves internal-data tools exists.
 
-To keep the pattern ready, the migration is captured as four worked
+To keep the pattern ready, the migration is captured as five worked
 references, each Level-1 verified with no CMA account. The first tool-bearing
 kit copies whichever matches how its tools read data; the live "run for a
 week" step still needs CMA access.
@@ -77,10 +77,15 @@ week" step still needs CMA access.
   tools pushing to / peeking at a **private message queue** with a
   sandbox-only URL; verifiable offline against a seeded in-memory store
   (`python examples/internal_queue_kit/verify.py`).
+- [`../examples/internal_s3_kit/`](../examples/internal_s3_kit/README.md) —
+  tools listing keys + fetching metadata from a **private object store**
+  with sandbox-only bucket + credentials; verifiable offline against a
+  seeded in-memory dict
+  (`python examples/internal_s3_kit/verify.py`).
 
-All four reduce to the same one-line change: keep `worker()`, pass a `tools=`
-factory. The API / DB / queue examples add only the env-configured credential
-contract (token vs. DSN vs. URL).
+All five reduce to the same one-line change: keep `worker()`, pass a `tools=`
+factory. The API / DB / queue / S3 examples add only the env-configured
+credential contract (token vs. DSN vs. URL vs. bucket+creds).
 
 When a kit is ready to migrate for real, the step-by-step from scaffold to
 live CMA session is in [`../MIGRATING.md`](../MIGRATING.md) (13-tick

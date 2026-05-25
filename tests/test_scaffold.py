@@ -28,7 +28,7 @@ def _import_from_path(module_name: str, file_path: Path):
     return mod
 
 
-@pytest.mark.parametrize("pattern", ["data", "api", "db", "queue"])
+@pytest.mark.parametrize("pattern", ["data", "api", "db", "queue", "s3"])
 def test_scaffold_produces_a_runnable_kit(pattern, tmp_path):
     kit = scaffold("acme_billing", pattern, tmp_path)
 
@@ -47,6 +47,7 @@ def test_scaffold_produces_a_runnable_kit(pattern, tmp_path):
         "internal_api_tools",
         "internal_db_tools",
         "internal_queue_tools",
+        "internal_s3_tools",
     )
     for orig in template_modules:
         if orig != "acme_billing_tools":

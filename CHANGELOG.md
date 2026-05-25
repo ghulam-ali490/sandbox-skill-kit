@@ -27,6 +27,16 @@ slate is stable.
   the script is intentionally NOT run from CI (CI already runs each
   underlying check individually) but is the recommended pre-push gate
   for contributors.
+- `examples/internal_s3_kit/` -- fifth Phase 2 example. Object-store
+  pattern (S3 / GCS / Cloudflare R2 / self-hosted MinIO / ...). Env
+  contract `INTERNAL_S3_BUCKET` + `INTERNAL_S3_REGION` +
+  `INTERNAL_S3_ACCESS_KEY` + `INTERNAL_S3_SECRET_KEY`; offline-verifiable
+  against a seeded in-memory `dict[key, metadata]`. Swap `_bucket()` for
+  an async S3 client (`aiobotocore` / `aioboto3`) to go live. Wired into
+  `scripts/new_example.py` (`--pattern s3`), `scripts/check_tools.py`
+  default scan list, `tests/test_examples.py`, `tests/test_scaffold.py`,
+  `tests/test_check_tools.py`, CI smoke, and the README / MIGRATING.md /
+  docs/rollout.md pattern tables.
 
 ### Changed
 

@@ -305,6 +305,7 @@ KIT_TOOLS = []
         "examples/internal_api_kit/internal_api_tools.py",
         "examples/internal_db_kit/internal_db_tools.py",
         "examples/internal_queue_kit/internal_queue_tools.py",
+        "examples/internal_s3_kit/internal_s3_tools.py",
     ],
 )
 def test_real_examples_are_clean(example_path):

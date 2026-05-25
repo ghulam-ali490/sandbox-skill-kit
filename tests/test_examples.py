@@ -301,3 +301,57 @@ async def test_queue_enqueue_creates_new_channel(queue_tools):
     peek = await queue_tools.peek_pending_jobs.call({"channel": "video-encode"})
     assert "depth=1" in peek
     assert "render fhd" in peek
+
+
+# --------------------------------------------------------------------------- #
+# internal_s3_kit (private object store; in-memory dict stands in)
+# --------------------------------------------------------------------------- #
+@pytest.fixture(scope="module")
+def s3_tools():
+    mod = _load(
+        "ex_internal_s3_tools",
+        EXAMPLES / "internal_s3_kit" / "internal_s3_tools.py",
+    )
+    bucket: dict[str, dict] = {
+        "reports/2026-q1.pdf": {
+            "size": 184_321,
+            "content_type": "application/pdf",
+            "modified": "2026-04-15T09:12:00Z",
+        },
+        "uploads/intake-form.json": {
+            "size": 812,
+            "content_type": "application/json",
+            "modified": "2026-05-22T14:01:00Z",
+        },
+    }
+    mod._bucket = lambda: bucket
+    return mod
+
+
+async def test_s3_list_all(s3_tools):
+    res = await s3_tools.list_objects.call({})
+    assert "2 object(s)" in res
+    assert "reports/2026-q1.pdf" in res
+    assert "uploads/intake-form.json" in res
+
+
+async def test_s3_list_with_prefix(s3_tools):
+    res = await s3_tools.list_objects.call({"prefix": "reports/"})
+    assert "reports/2026-q1.pdf" in res
+    assert "uploads/intake-form.json" not in res
+
+
+async def test_s3_list_empty_prefix_match(s3_tools):
+    res = await s3_tools.list_objects.call({"prefix": "no-such/"})
+    assert "No objects with prefix" in res
+
+
+async def test_s3_get_metadata_found(s3_tools):
+    res = await s3_tools.get_object_metadata.call({"key": "reports/2026-q1.pdf"})
+    assert "184321B" in res
+    assert "application/pdf" in res
+
+
+async def test_s3_get_metadata_missing(s3_tools):
+    res = await s3_tools.get_object_metadata.call({"key": "nope.bin"})
+    assert "No object found" in res

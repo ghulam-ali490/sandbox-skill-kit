@@ -36,6 +36,7 @@ TEMPLATES = {
     "api":   {"dir": EXAMPLES / "internal_api_kit",   "tools_module": "internal_api_tools"},
     "db":    {"dir": EXAMPLES / "internal_db_kit",    "tools_module": "internal_db_tools"},
     "queue": {"dir": EXAMPLES / "internal_queue_kit", "tools_module": "internal_queue_tools"},
+    "s3":    {"dir": EXAMPLES / "internal_s3_kit",    "tools_module": "internal_s3_tools"},
 }
 
 # Lowercase letters / digits / underscore; must start with a letter. Same

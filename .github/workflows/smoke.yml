@@ -48,6 +48,9 @@ jobs:
           examples/internal_queue_kit/internal_queue_tools.py
           examples/internal_queue_kit/sandbox_runner.py
           examples/internal_queue_kit/verify.py
+          examples/internal_s3_kit/internal_s3_tools.py
+          examples/internal_s3_kit/sandbox_runner.py
+          examples/internal_s3_kit/verify.py
 
       - name: SDK helpers present (v0.103 surface the kit relies on)
         run: |
@@ -81,6 +84,10 @@ jobs:
 
       - name: Phase 2 example verify (internal_queue_kit)
         working-directory: examples/internal_queue_kit
+        run: python verify.py
+
+      - name: Phase 2 example verify (internal_s3_kit)
+        working-directory: examples/internal_s3_kit
         run: python verify.py
 
       - name: Scaffold + verify a fresh example (catches template drift)

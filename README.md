@@ -151,6 +151,7 @@ client.beta.sessions.events.send(
 - `examples/internal_api_kit/` — second Phase 2 migration: tools calling a private HTTP API with a sandbox-only credential (the common real-world shape), verifiable offline via an httpx mock
 - `examples/internal_db_kit/` — third Phase 2 migration: tools querying a private database via an env-configured DSN, verifiable offline against an in-memory seeded sqlite (swap `_conn()` for `asyncpg`/`aiomysql`/etc. to go live against a real DB)
 - `examples/internal_queue_kit/` — fourth Phase 2 migration: tools pushing to / peeking at a private message queue via an env-configured URL, verifiable offline against a seeded in-memory store (swap `_store()` for `redis.asyncio`/`aiobotocore`/`nats-py`/etc. to go live against a real backend)
+- `examples/internal_s3_kit/` — fifth Phase 2 migration: tools listing keys + fetching metadata from a private object store (S3/GCS/R2/MinIO) via env-configured bucket + creds, verifiable offline against a seeded in-memory dict (swap `_bucket()` for `aiobotocore`/`aioboto3` to go live)
 - `tests/` — offline tests that mock the Anthropic SDK and Modal, so the webhook wiring (signature verify, queue drain, get-or-create sandbox, event routing) is exercised with **no CMA account and no Modal deploy**
 - `requirements-dev.txt` — test/lint deps (`pytest`, `pytest-asyncio`, `ruff`)
 - `pyproject.toml` — pytest + ruff config; cookbook-derived modules are excluded from ruff to stay byte-faithful to upstream
@@ -168,12 +169,13 @@ python scripts/new_example.py my_kit --pattern db
 ```
 
 `--pattern` picks the closest template: `data` (bundled file), `api` (private
-HTTP API behind a token), `db` (private database via env DSN), or `queue`
-(private message queue via env URL). The script copies the template, renames
-the tool module to `my_kit_tools.py`, and rewrites imports so the result is
-immediately runnable. Then edit the two tool functions (and, for
-`api`/`db`/`queue`, the env var name and offline fixture) to point at your
-real internal data.
+HTTP API behind a token), `db` (private database via env DSN), `queue`
+(private message queue via env URL), or `s3` (private object store via env
+bucket + creds). The script copies the template, renames the tool module to
+`my_kit_tools.py`, and rewrites imports so the result is immediately
+runnable. Then edit the two tool functions (and, for
+`api`/`db`/`queue`/`s3`, the env var names and offline fixture) to point at
+your real internal data.
 
 For the full step-by-step from scaffold through to a live CMA session, see
 [`MIGRATING.md`](MIGRATING.md).
