@@ -142,6 +142,7 @@ client.beta.sessions.events.send(
 - `scripts/bootstrap.sh` — one-command wrapper around `modal secret create` + `modal deploy`
 - `scripts/validate.py` — pre-flight sanity check (Modal authed, secret exists, SDK version, env key shape)
 - `scripts/e2e_test.py` — Level 3 driver: fires a real session and asserts tools ran inside the Modal sandbox
+- `scripts/new_example.py` — scaffold a new example kit from one of the three Phase 2 templates: `python scripts/new_example.py my_kit --pattern db`
 - `docs/rollout.md` — when to use this kit vs Anthropic-managed sandboxes, plus a workshop-wide rollout plan
 - `examples/internal_data_kit/` — worked Phase 2 migration: tools reading a bundled dataset, wired into the worker via `tools=`, Level-1 verifiable with no CMA account
 - `examples/internal_api_kit/` — second Phase 2 migration: tools calling a private HTTP API with a sandbox-only credential (the common real-world shape), verifiable offline via an httpx mock
@@ -150,6 +151,24 @@ client.beta.sessions.events.send(
 - `requirements-dev.txt` — test/lint deps (`pytest`, `pytest-asyncio`, `ruff`)
 - `pyproject.toml` — pytest + ruff config; cookbook-derived modules are excluded from ruff to stay byte-faithful to upstream
 - `.github/workflows/smoke.yml` — CI: ruff lint, compiles sources, checks the v0.103 SDK helpers import, runs the offline tests and the example's `verify.py` (all credential-free; no Modal/CMA)
+
+## Starting a new example kit
+
+If you are bringing a new kit onto self-hosted sandboxes, scaffold it from one
+of the Phase 2 templates instead of copying by hand:
+
+```shell
+python scripts/new_example.py my_kit --pattern db
+# Scaffolded: examples/my_kit
+# Verify it: cd examples/my_kit && python verify.py
+```
+
+`--pattern` picks the closest template: `data` (bundled file), `api` (private
+HTTP API behind a token), or `db` (private database via env DSN). The script
+copies the template, renames the tool module to `my_kit_tools.py`, and
+rewrites imports so the result is immediately runnable. Then edit the two
+tool functions (and, for `api`/`db`, the env var name and offline fixture)
+to point at your real internal data.
 
 ## Development
 

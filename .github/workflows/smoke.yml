@@ -34,6 +34,7 @@ jobs:
           sandbox_runner.py
           scripts/validate.py
           scripts/e2e_test.py
+          scripts/new_example.py
           examples/internal_data_kit/internal_tools.py
           examples/internal_data_kit/sandbox_runner.py
           examples/internal_data_kit/verify.py
@@ -70,3 +71,8 @@ jobs:
       - name: Phase 2 example verify (internal_db_kit)
         working-directory: examples/internal_db_kit
         run: python verify.py
+
+      - name: Scaffold + verify a fresh example (catches template drift)
+        run: |
+          python scripts/new_example.py ci_scaffold_smoke --pattern db --dest /tmp/scaffold_ci
+          cd /tmp/scaffold_ci/ci_scaffold_smoke && python verify.py
