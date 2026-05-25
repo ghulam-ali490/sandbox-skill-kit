@@ -40,6 +40,9 @@ jobs:
           examples/internal_api_kit/internal_api_tools.py
           examples/internal_api_kit/sandbox_runner.py
           examples/internal_api_kit/verify.py
+          examples/internal_db_kit/internal_db_tools.py
+          examples/internal_db_kit/sandbox_runner.py
+          examples/internal_db_kit/verify.py
 
       - name: SDK helpers present (v0.103 surface the kit relies on)
         run: |
@@ -62,4 +65,8 @@ jobs:
 
       - name: Phase 2 example verify (internal_api_kit)
         working-directory: examples/internal_api_kit
+        run: python verify.py
+
+      - name: Phase 2 example verify (internal_db_kit)
+        working-directory: examples/internal_db_kit
         run: python verify.py

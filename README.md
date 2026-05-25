@@ -145,6 +145,7 @@ client.beta.sessions.events.send(
 - `docs/rollout.md` — when to use this kit vs Anthropic-managed sandboxes, plus a workshop-wide rollout plan
 - `examples/internal_data_kit/` — worked Phase 2 migration: tools reading a bundled dataset, wired into the worker via `tools=`, Level-1 verifiable with no CMA account
 - `examples/internal_api_kit/` — second Phase 2 migration: tools calling a private HTTP API with a sandbox-only credential (the common real-world shape), verifiable offline via an httpx mock
+- `examples/internal_db_kit/` — third Phase 2 migration: tools querying a private database via an env-configured DSN, verifiable offline against an in-memory seeded sqlite (swap `_conn()` for `asyncpg`/`aiomysql`/etc. to go live against a real DB)
 - `tests/` — offline tests that mock the Anthropic SDK and Modal, so the webhook wiring (signature verify, queue drain, get-or-create sandbox, event routing) is exercised with **no CMA account and no Modal deploy**
 - `requirements-dev.txt` — test/lint deps (`pytest`, `pytest-asyncio`, `ruff`)
 - `pyproject.toml` — pytest + ruff config; cookbook-derived modules are excluded from ruff to stay byte-faithful to upstream
