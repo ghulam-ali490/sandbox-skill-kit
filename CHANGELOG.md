@@ -4,6 +4,30 @@ All notable changes to this project will be documented here. The format is
 loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Post-v0.1 work that has shipped to `main`. Will be cut as `v0.2.0` once the
+slate is stable.
+
+### Added
+
+- `examples/internal_queue_kit/` -- fourth Phase 2 example. Message-queue
+  pattern (SQS / Redis Streams / NATS / RabbitMQ / ...). Env contract
+  `INTERNAL_QUEUE_URL`; offline-verifiable against a seeded in-memory
+  `dict[channel, list[job]]`. Swap `_store()` for an async queue client to
+  go live. Wired into `scripts/new_example.py` (`--pattern queue`),
+  `scripts/check_tools.py` default scan list, `tests/test_examples.py`,
+  `tests/test_scaffold.py`, `tests/test_check_tools.py`, CI smoke, and the
+  README / MIGRATING.md / docs/rollout.md pattern tables.
+
+### Changed
+
+- `scripts/check_tools.py` now tracks `from ... import beta_async_tool as X`
+  aliased imports and recognises `@X` as a tool decorator. Closes the v0.1
+  "decorator detection" limitation. New tests cover bare/aliased/short-alias/
+  multiple-aliases paths and confirm an unrelated import aliased to the
+  same local name is not treated as a kit tool.
+
 ## [0.1.0] - 2026-05-25
 
 First tagged release. The kit is feature-complete for adopting `anthropic-sdk-python`

@@ -19,10 +19,10 @@ statically (AST-only, no import) so an author sees them before running
     file, or decorated tools that aren't in ``KIT_TOOLS`` (orphans the
     agent will never see).
 
-Limitation: detects ``@beta_async_tool`` only when referenced by that bare
-name (or as an attribute access ending in ``beta_async_tool``). Aliased
-imports like ``from anthropic.lib.tools import beta_async_tool as tool``
-are not tracked.
+Decorator detection: recognises ``@beta_async_tool`` by bare name,
+attribute access ending in ``beta_async_tool`` (e.g.
+``@tools.beta_async_tool``), and ``from ... import beta_async_tool as X``
+aliased imports (any local name bound to ``beta_async_tool``).
 
 Usage:
     python scripts/check_tools.py                       # scan all example tool modules
@@ -53,7 +53,8 @@ DEFAULT_EXAMPLE_TOOL_MODULES = [
 # the agent picks whichever loaded first, so your tool stays unused.
 DEFAULT_TOOL_NAMES = frozenset({"bash", "read", "write", "edit", "glob", "grep"})
 
-# Decorator names we recognise as marking a tool.
+# Decorator names we recognise as marking a tool. Aliased imports are added
+# per-file by ``_collect_decorator_aliases``; this is the baseline.
 TOOL_DECORATORS = frozenset({"beta_async_tool"})
 
 
@@ -73,6 +74,27 @@ def _decorator_name(node: ast.expr) -> str | None:
     if isinstance(node, ast.Attribute):
         return node.attr
     return None
+
+
+def _collect_decorator_aliases(tree: ast.Module) -> set[str]:
+    """Find all local names that bind to ``beta_async_tool``.
+
+    Always includes the bare name itself. Additionally adds any local name
+    introduced by ``from ... import beta_async_tool as X`` (regardless of the
+    module the import comes from -- name-based matching keeps the linter
+    simple, same trade-off as the rest of the file).
+
+    Attribute-style usage (`@tools.beta_async_tool`) is handled separately by
+    ``_decorator_name`` returning the trailing attribute and doesn't need to
+    be tracked here.
+    """
+    aliases: set[str] = set(TOOL_DECORATORS)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.name == "beta_async_tool":
+                    aliases.add(alias.asname or alias.name)
+    return aliases
 
 
 def _has_args_section(docstring: str | None) -> bool:
@@ -234,12 +256,13 @@ def check_file(path: Path) -> list[Issue]:
 
     issues: list[Issue] = []
     decorated_names: set[str] = set()
+    tool_decorator_names = _collect_decorator_aliases(tree)
 
     for node in tree.body:
         if not isinstance(node, (ast.AsyncFunctionDef, ast.FunctionDef)):
             continue
         names = {_decorator_name(d) for d in node.decorator_list}
-        if not (names & TOOL_DECORATORS):
+        if not (names & tool_decorator_names):
             continue
         decorated_names.add(node.name)
         issues.extend(_check_tool_func(node))

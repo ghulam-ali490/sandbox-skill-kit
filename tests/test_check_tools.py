@@ -191,6 +191,113 @@ KIT_TOOLS = [lookup]
     assert main([str(path), "--strict"]) == 1
 
 
+# --------------------------------------------------------------------------- #
+# Decorator alias detection (closes the v0.1 known limitation)
+# --------------------------------------------------------------------------- #
+ALIASED = '''
+from anthropic.lib.tools import beta_async_tool as tool
+
+
+@tool
+async def lookup(order_id: str) -> str:
+    """Look up an order.
+
+    Args:
+        order_id: The order id.
+    """
+    return f"order {order_id}"
+
+
+KIT_TOOLS = [lookup]
+'''
+
+
+def test_aliased_decorator_import_is_detected(tmp_path):
+    """Closes the v0.1 limitation: `from ... import beta_async_tool as tool`
+    used as `@tool` should be recognised exactly like the bare name."""
+    issues = check_file(_write(tmp_path, ALIASED))
+    assert issues == []
+    # Sanity check: KIT_TOOLS = [lookup] is satisfied, meaning the linter
+    # treated `lookup` as a decorated tool (otherwise KIT_TOOLS would have
+    # complained about referencing an undecorated name).
+
+
+def test_aliased_decorator_rules_still_fire(tmp_path):
+    """Make sure the alias path doesn't bypass the normal rules."""
+    bad = ALIASED.replace("async def lookup(order_id: str)", "async def read(order_id: str)")
+    bad = bad.replace("KIT_TOOLS = [lookup]", "KIT_TOOLS = [read]")
+    issues = check_file(_write(tmp_path, bad))
+    assert "ERROR" in _severities(issues, "collides with the default toolset")
+
+
+def test_aliased_decorator_with_short_alias(tmp_path):
+    body = ALIASED.replace(
+        "from anthropic.lib.tools import beta_async_tool as tool",
+        "from anthropic.lib.tools import beta_async_tool as t",
+    ).replace("@tool", "@t")
+    issues = check_file(_write(tmp_path, body))
+    assert issues == []
+
+
+def test_multiple_aliases_all_detected(tmp_path):
+    """Two aliased imports of beta_async_tool; both should be recognised."""
+    body = '''
+from anthropic.lib.tools import beta_async_tool as a
+from anthropic.lib.tools import beta_async_tool as b
+
+
+@a
+async def first(x: str) -> str:
+    """First.
+
+    Args:
+        x: A value.
+    """
+    return x
+
+
+@b
+async def second(y: str) -> str:
+    """Second.
+
+    Args:
+        y: A value.
+    """
+    return y
+
+
+KIT_TOOLS = [first, second]
+'''
+    issues = check_file(_write(tmp_path, body))
+    assert issues == []
+
+
+def test_unrelated_import_aliased_to_tool_is_ignored(tmp_path):
+    """`from somewhere import unrelated as tool` then `@tool` should NOT be
+    treated as a kit tool, even though the local name matches a common
+    alias pattern."""
+    body = '''
+from somewhere import unrelated as tool
+
+
+@tool
+async def lookup(order_id: str) -> str:
+    """Look up an order.
+
+    Args:
+        order_id: The order id.
+    """
+    return f"order {order_id}"
+
+
+KIT_TOOLS = []
+'''
+    issues = check_file(_write(tmp_path, body))
+    # Because `lookup` is NOT recognised as a tool, KIT_TOOLS = [] is flagged
+    # for being empty -- but no per-tool rule should have fired against `lookup`.
+    assert all("tool 'lookup'" not in i.message for i in issues)
+
+
 @pytest.mark.parametrize(
     "example_path",
     [
