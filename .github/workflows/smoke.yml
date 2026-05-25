@@ -35,6 +35,7 @@ jobs:
           scripts/validate.py
           scripts/e2e_test.py
           scripts/new_example.py
+          scripts/check_tools.py
           examples/internal_data_kit/internal_tools.py
           examples/internal_data_kit/sandbox_runner.py
           examples/internal_data_kit/verify.py
@@ -59,6 +60,9 @@ jobs:
 
       - name: Offline tests (mock the SDK + Modal; no CMA account needed)
         run: pytest
+
+      - name: Tools linter pre-flight against all example kits
+        run: python scripts/check_tools.py --strict
 
       - name: Phase 2 example verify (internal_data_kit)
         working-directory: examples/internal_data_kit

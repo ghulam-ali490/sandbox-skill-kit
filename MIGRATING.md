@@ -77,7 +77,16 @@ through 7 are reachable with no Modal account and no CMA access (Level 1).
   yours (a handful of records covering the happy path, a not-found case,
   and any filter branches your tools have).
 
-- [ ] **6. Re-run `python verify.py`** until it prints `PASS`. The script
+- [ ] **6a. Pre-flight your tools module** with the static linter:
+  ```shell
+  python scripts/check_tools.py examples/my_kit/my_kit_tools.py
+  ```
+  This catches the gotchas below (default-toolset name collisions, missing
+  type hints, docstring/Args gaps, `KIT_TOOLS` mismatches) before you spend
+  time chasing them through `verify.py` or a live session. Add `--strict`
+  to fail on warnings too.
+
+- [ ] **6b. Re-run `python verify.py`** until it prints `PASS`. The script
   asserts your tools land in the per-session factory output, that their
   input schemas are present, and that they return the strings you expect
   for each fixture input.
@@ -201,6 +210,7 @@ through 7 are reachable with no Modal account and no CMA access (Level 1).
 
 | Gate | What it proves | Needs |
 | --- | --- | --- |
+| **Level 0** (`python scripts/check_tools.py`) | Your tools module is free of the structural gotchas below (name collisions, missing type hints/docstrings, KIT_TOOLS issues) | Nothing beyond Python 3.12 |
 | **Level 1** (`python verify.py`) | Your tools have valid schemas, land in the factory, and return correct strings against an offline fixture | Nothing beyond Python 3.12 |
 | **Level 2** (`python scripts/validate.py` + `modal deploy`) | Modal is authed, the Secret exists, the SDK version is correct, the webhook is reachable | Modal account |
 | **Level 3** (`python scripts/e2e_test.py`) | A real CMA session uses one of your tools inside your Modal sandbox | Modal account + CMA env + webhook registered |
