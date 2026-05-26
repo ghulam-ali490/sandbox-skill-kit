@@ -21,6 +21,8 @@ This script talks to the Anthropic control plane only. It needs three env vars
   ANTHROPIC_API_KEY         your org key (sk-ant-api...) -- drives session setup
   ANTHROPIC_ENVIRONMENT_ID  the SAME env_... that is in the Modal Secret
   CMA_AGENT_ID              an agent in that environment (agt_...)
+  CMA_PROMPT                optional: prompt to send. Default exercises the
+                            bash tool. Override to test your kit's own tools.
 
 If CMA_AGENT_ID is unset, the script offers to create a minimal bash-capable
 agent for you and prints its id so you can reuse it.
@@ -29,6 +31,7 @@ Usage:
     export ANTHROPIC_API_KEY=sk-ant-api...
     export ANTHROPIC_ENVIRONMENT_ID=env_...
     export CMA_AGENT_ID=agt_...            # optional; omit to auto-create
+    export CMA_PROMPT='List open incidents for severity high.'  # optional
     python scripts/e2e_test.py
 
 Then, in another terminal, watch the sandbox side:
@@ -192,9 +195,12 @@ def main() -> int:
     api_key = _need("ANTHROPIC_API_KEY")
     environment_id = _need("ANTHROPIC_ENVIRONMENT_ID")
     agent_id = os.environ.get("CMA_AGENT_ID")
+    prompt = os.environ.get("CMA_PROMPT", PROMPT)
 
     client = anthropic.Anthropic(api_key=api_key)
-    return run(client, agent_id=agent_id, environment_id=environment_id)
+    return run(
+        client, agent_id=agent_id, environment_id=environment_id, prompt=prompt
+    )
 
 
 if __name__ == "__main__":

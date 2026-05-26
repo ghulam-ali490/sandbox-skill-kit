@@ -20,6 +20,8 @@ Secrets (modal secret create cma-self-hosted-sandboxes-secrets ...):
   ANTHROPIC_ENVIRONMENT_KEY  - the environment key: Bearer auth for the work
                                poll/ack/stop, and the runner's only credential
   ANTHROPIC_BASE_URL         - optional, default https://api.anthropic.com
+  SANDBOX_TIMEOUT_SECONDS    - optional, default 3600. Per-sandbox lifetime
+                               cap; bump for long-running agents.
 
 Deploy:
   modal secret create cma-self-hosted-sandboxes-secrets \
@@ -45,6 +47,37 @@ SECRET_NAME = "cma-self-hosted-sandboxes-secrets"
 
 SDK_PACKAGE = "anthropic"
 RUNNER_PATH = "/root/sandbox_runner.py"
+
+# Per-sandbox lifetime cap. Default 1h matches the cookbook; adopters with
+# long-running agents (multi-hour data processing) bump it via the Modal
+# Secret without forking this file. See README "Tuning sandbox timeout".
+SANDBOX_TIMEOUT_ENV = "SANDBOX_TIMEOUT_SECONDS"
+DEFAULT_SANDBOX_TIMEOUT_SECONDS = 3600
+
+
+def _sandbox_timeout() -> int:
+    """Resolve the per-sandbox lifetime cap from env, with validation.
+
+    Returns ``DEFAULT_SANDBOX_TIMEOUT_SECONDS`` when ``SANDBOX_TIMEOUT_SECONDS``
+    is unset. A non-integer or non-positive value raises so a typo in the Modal
+    Secret fails loudly at first use instead of silently misconfiguring (e.g.
+    Python would happily ``int("0")`` and give zero-second sandboxes).
+    """
+    raw = os.environ.get(SANDBOX_TIMEOUT_ENV)
+    if raw is None:
+        return DEFAULT_SANDBOX_TIMEOUT_SECONDS
+    try:
+        value = int(raw)
+    except ValueError:
+        raise RuntimeError(
+            f"{SANDBOX_TIMEOUT_ENV}={raw!r} is not an integer; "
+            "set it to a positive number of seconds."
+        ) from None
+    if value <= 0:
+        raise RuntimeError(
+            f"{SANDBOX_TIMEOUT_ENV}={raw!r} must be a positive integer (seconds)."
+        )
+    return value
 
 app = modal.App(APP_NAME)
 secrets = modal.Secret.from_name(SECRET_NAME)
@@ -181,7 +214,7 @@ async def _process_work_item(
         environment_id=environment_id,
         work_id=work_id,
         environment_key=environment_key,
-        sandbox_timeout=3600,
+        sandbox_timeout=_sandbox_timeout(),
     )
     print(
         f"[webhook] work={work_id} session={session_id} sandbox={sb.object_id} (created)",

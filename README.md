@@ -87,7 +87,7 @@ modal secret create cma-self-hosted-sandboxes-secrets \
     --force
 ```
 
-No redeploy needed; secrets are read at container start.
+No redeploy needed before sending real traffic: secrets are injected at container start, so the *next* webhook container reads the new values. A currently-warm container keeps the old values until it recycles -- after a known-leak rotation, force adoption with `modal app stop cma-self-hosted-sandboxes && modal deploy modal_sandbox_webhook.py` (see `SECURITY.md`).
 
 ### 5. Smoke-test
 
@@ -136,6 +136,26 @@ modal app logs cma-self-hosted-sandboxes
 You should see `[webhook] acked work=... session=... sandbox=sb-...` and then
 `[runner] ...` lines from the sandbox itself, and the driver should end with
 `PASS: agent executed tools inside the self-hosted Modal sandbox`.
+
+### Tuning sandbox timeout (optional)
+
+Each Modal Sandbox carries a hard lifetime cap; the default is one hour
+(`DEFAULT_SANDBOX_TIMEOUT_SECONDS = 3600`). If your agent regularly runs
+longer (e.g. multi-hour data processing), set `SANDBOX_TIMEOUT_SECONDS`
+in the Modal Secret and re-create with `--force`:
+
+```shell
+modal secret create cma-self-hosted-sandboxes-secrets \
+    ANTHROPIC_WEBHOOK_SECRET='whsec_...' \
+    ANTHROPIC_ENVIRONMENT_ID='env_...' \
+    ANTHROPIC_ENVIRONMENT_KEY='sk-ant-oat...' \
+    SANDBOX_TIMEOUT_SECONDS=14400 \
+    --force
+```
+
+The next sandbox to spawn picks up the new value. Setting it to a
+non-integer or non-positive value fails the next webhook delivery loudly
+(rather than silently giving you zero-second sandboxes).
 
 ### 7. Add YOUR kit's tools
 

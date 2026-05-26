@@ -32,7 +32,8 @@ from types import SimpleNamespace
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from e2e_test import run  # noqa: E402
+import e2e_test  # noqa: E402
+from e2e_test import PROMPT, main, run  # noqa: E402
 
 
 # --------------------------------------------------------------------------- #
@@ -276,3 +277,60 @@ def test_prompt_is_sent_via_events_send(capsys):
     assert isinstance(content, list)
     assert content[0]["type"] == "text"
     assert content[0]["text"] == "test prompt"
+
+
+# --------------------------------------------------------------------------- #
+# main() env-var wiring  (CMA_PROMPT override)
+# --------------------------------------------------------------------------- #
+def _main_with_fake(monkeypatch, *, env: dict) -> tuple[int, FakeAnthropic]:
+    """Run main() with anthropic.Anthropic patched to return a FakeAnthropic.
+
+    Sets only the env vars in ``env`` (everything else is cleared) so a stray
+    real CMA_PROMPT in the shell can't leak into the test.
+    """
+    for var in ("ANTHROPIC_API_KEY", "ANTHROPIC_ENVIRONMENT_ID",
+                "CMA_AGENT_ID", "CMA_PROMPT"):
+        monkeypatch.delenv(var, raising=False)
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+
+    fake = FakeAnthropic(
+        status_sequence=["idle"],
+        transcript=[_event("agent.tool_use"), _event("agent.message")],
+    )
+    monkeypatch.setattr(e2e_test.anthropic, "Anthropic", lambda **_: fake)
+    # Shrink the polling so the test doesn't burn wall time.
+    monkeypatch.setattr(e2e_test, "POLL_SECONDS", 0.01)
+    monkeypatch.setattr(e2e_test, "TIMEOUT_SECONDS", 0.5)
+    return main(), fake
+
+
+def test_main_uses_default_prompt_when_cma_prompt_unset(monkeypatch):
+    code, fake = _main_with_fake(
+        monkeypatch,
+        env={
+            "ANTHROPIC_API_KEY": "sk-ant-api-test",
+            "ANTHROPIC_ENVIRONMENT_ID": "env_test",
+            "CMA_AGENT_ID": "agt_test",
+        },
+    )
+    assert code == 0
+    sent_text = fake.beta.sessions.events.send_calls[0]["events"][0]["content"][0]["text"]
+    # Default prompt -- the one in module scope.
+    assert sent_text == PROMPT
+
+
+def test_main_uses_cma_prompt_override(monkeypatch):
+    custom = "List open incidents for severity high."
+    code, fake = _main_with_fake(
+        monkeypatch,
+        env={
+            "ANTHROPIC_API_KEY": "sk-ant-api-test",
+            "ANTHROPIC_ENVIRONMENT_ID": "env_test",
+            "CMA_AGENT_ID": "agt_test",
+            "CMA_PROMPT": custom,
+        },
+    )
+    assert code == 0
+    sent_text = fake.beta.sessions.events.send_calls[0]["events"][0]["content"][0]["text"]
+    assert sent_text == custom

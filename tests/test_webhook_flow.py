@@ -243,3 +243,54 @@ async def test_webhook_drains_on_run_started(monkeypatch):
     assert out["status"] == "ok"
     assert out["spawned"] == [{"session_id": "s1", "created": True}]
     drain.assert_awaited_once()
+
+
+# --------------------------------------------------------------------------- #
+# _sandbox_timeout  (env-var configurable lifetime cap)
+# --------------------------------------------------------------------------- #
+def test_sandbox_timeout_default_when_env_unset(monkeypatch):
+    monkeypatch.delenv(m.SANDBOX_TIMEOUT_ENV, raising=False)
+    assert m._sandbox_timeout() == m.DEFAULT_SANDBOX_TIMEOUT_SECONDS == 3600
+
+
+def test_sandbox_timeout_reads_positive_int_from_env(monkeypatch):
+    monkeypatch.setenv(m.SANDBOX_TIMEOUT_ENV, "14400")
+    assert m._sandbox_timeout() == 14400
+
+
+@pytest.mark.parametrize("bad", ["not-a-number", "1h", "3600.5", ""])
+def test_sandbox_timeout_rejects_non_integer(monkeypatch, bad):
+    # A typo in the Modal Secret must fail loudly at first use, not silently
+    # misconfigure -- otherwise int("3600.5") would explode at sandbox-create
+    # time with a much less actionable error.
+    monkeypatch.setenv(m.SANDBOX_TIMEOUT_ENV, bad)
+    with pytest.raises(RuntimeError) as exc:
+        m._sandbox_timeout()
+    assert m.SANDBOX_TIMEOUT_ENV in str(exc.value)
+
+
+@pytest.mark.parametrize("bad", ["0", "-1", "-3600"])
+def test_sandbox_timeout_rejects_non_positive(monkeypatch, bad):
+    # Zero-second sandboxes would just churn on create/teardown -- treat
+    # 0 and negative as configuration errors, not features.
+    monkeypatch.setenv(m.SANDBOX_TIMEOUT_ENV, bad)
+    with pytest.raises(RuntimeError) as exc:
+        m._sandbox_timeout()
+    assert "positive integer" in str(exc.value)
+
+
+async def test_process_work_item_threads_configured_timeout(monkeypatch):
+    # Confirm the env-var value reaches _create_sandbox (the only place that
+    # actually uses it), so a misconfigured timeout can't get swallowed by a
+    # default elsewhere.
+    monkeypatch.delenv(m.SANDBOX_TIMEOUT_ENV, raising=False)
+    monkeypatch.setenv(m.SANDBOX_TIMEOUT_ENV, "7200")
+    monkeypatch.setattr(m, "_find_live_sandbox", AsyncMock(return_value=None))
+    create = AsyncMock(return_value=types.SimpleNamespace(object_id="sb-new"))
+    monkeypatch.setattr(m, "_create_sandbox", create)
+
+    await m._process_work_item(
+        session_id="s3", work_id="w3", environment_id="env", environment_key="k"
+    )
+
+    assert create.await_args.kwargs["sandbox_timeout"] == 7200

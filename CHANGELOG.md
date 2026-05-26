@@ -6,6 +6,31 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Configurable per-sandbox timeout** -- `modal_sandbox_webhook.py` now reads
+  `SANDBOX_TIMEOUT_SECONDS` from the Modal Secret instead of hardcoding 3600.
+  Adopters running long agent sessions (multi-hour data processing) bump it
+  without forking the cookbook code. Default is unchanged (3600). Non-integer
+  or non-positive values fail loudly at first webhook delivery (a typo can't
+  silently degrade to zero-second sandboxes). Documented in README "Tuning
+  sandbox timeout" + `.env.example`; 7 new tests in `test_webhook_flow.py`
+  cover default / valid / non-integer (4 cases) / non-positive (3 cases) /
+  threaded-through-to-create.
+- **`CMA_PROMPT` env var for `scripts/e2e_test.py`** -- adopters testing their
+  own kit's tools can now override the default bash-exercising prompt without
+  editing source. 2 new tests in `test_e2e_dry_run.py` cover default + override
+  via `main()`.
+
+### Fixed
+
+- **Secret rotation honesty** -- both `SECURITY.md` and the README Quickstart
+  previously said "no redeploy is needed" after re-creating the Modal Secret
+  with `--force`. That is true for the *next* container start, but a currently-
+  warm webhook container retains the old env values until it recycles. Both
+  docs now document this explicitly and include the `modal app stop && modal
+  deploy` recipe for forcing immediate adoption after a known-leak rotation.
+
 ## [0.3.0] - 2026-05-26
 
 Third tagged release. Closes the long-standing "Level 3 not exercised

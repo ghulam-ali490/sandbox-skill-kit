@@ -61,7 +61,16 @@ model before putting sensitive data behind it.
   live value back out of the Modal Secret.
 - **Rotation:** rotate the environment key and webhook secret on a schedule
   (the rollout doc recommends every 90 days, with one named owner). Re-create
-  the Modal Secret with `--force`; no redeploy is needed.
+  the Modal Secret with `--force`. Note that the secret is injected as env vars
+  at **container start**: the *next* webhook container to spin up reads the new
+  values, but any currently-warm container holds the old values until it
+  recycles. To force immediate adoption (e.g. after a known-leak rotation),
+  redeploy:
+
+  ```shell
+  modal app stop cma-self-hosted-sandboxes
+  modal deploy modal_sandbox_webhook.py
+  ```
 
 ## Reporting an issue
 
