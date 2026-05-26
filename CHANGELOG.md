@@ -6,6 +6,16 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-26
+
+Third tagged release. Closes the long-standing "Level 3 not exercised
+end-to-end" known limitation as far as is possible without Anthropic
+Research Preview access (via a scripted SDK fake), ships an adopter-
+experience pass + bug hunt from cold-path reviews of the kit, adds a
+post-deploy webhook probe that closes the Level 2 → Level 3 gap, and a
+full-system audit pass with six concrete fixes across CI, config,
+scripts, and tests.
+
 ### Added
 
 - **Level 3 dry-run** (`tests/test_e2e_dry_run.py` + a `FakeAnthropic`
@@ -321,5 +331,6 @@ keep `worker()`, pass a `tools=` factory.
 - MCP tunnels are out of scope for v0.1 (Phase 4 of the rollout plan).
   They are a separate Research Preview feature gated independently.
 
+[0.3.0]: https://github.com/ghulam-ali490/sandbox-skill-kit/releases/tag/v0.3.0
 [0.2.0]: https://github.com/ghulam-ali490/sandbox-skill-kit/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ghulam-ali490/sandbox-skill-kit/releases/tag/v0.1.0

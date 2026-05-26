@@ -271,7 +271,7 @@ a new example template or a new `check_tools` rule.
 
 ## Versioning and changelog
 
-This kit follows [SemVer](https://semver.org/). Current release: **v0.2.0**.
+This kit follows [SemVer](https://semver.org/). Current release: **v0.3.0**.
 See [`CHANGELOG.md`](CHANGELOG.md) for what is in each tag and the known
 limitations of each release.
 
